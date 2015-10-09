@@ -31,7 +31,8 @@ GLfloat vertexPositions[] = {
 GLfloat vertexColours[] = {
 	1.0f, 1.0f, 1.0f, 1.0f,
 	0.0f, 1.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f, 1.0f, };
+	0.0f, 0.0f, 1.0f, 1.0f, 
+};
 
 /*
 This function is called before entering the main rendering loop.
@@ -45,6 +46,7 @@ void init(GLWrapper *glw)
 	x1 = 0.75f;
 	x2 = 0.75f;
 	x3 = -0.75f;
+
 	glGenBuffers(1, &positionBufferObject);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
@@ -53,7 +55,7 @@ void init(GLWrapper *glw)
 	glGenBuffers(1, &colourObject);
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColours), vertexColours, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 1);
 
 	try
 	{
@@ -78,7 +80,7 @@ void display()
 	std::cout << "x1: " << vertexPositions[0] << std::endl;
 	std::cout << "x2: " << vertexPositions[4] << std::endl;
 	std::cout << "x3: " << vertexPositions[8] << std::endl;
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(program);
@@ -91,6 +93,7 @@ void display()
 	glEnableVertexAttribArray() and glDisableVertexAttribArray() */
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
+
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glEnableVertexAttribArray(1);
 
@@ -98,9 +101,9 @@ void display()
 	index relates to the layout qualifier in the vertex shader and in
 	glEnableVertexAttribArray() and glDisableVertexAttribArray() */
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glDrawArrays(GL_TRIANGLES, 0, 3);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColours), vertexColours, GL_STATIC_DRAW);
+
+	/*Uncommenting sets vertexPositions as colour object? Allows colour manipulation*/
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);

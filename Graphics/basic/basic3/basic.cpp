@@ -215,7 +215,7 @@ void display()
 	/* Set the current active buffer object */
 	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
 
-	/* Specifies where the dat values accociated with index can accessed in the vertex shader */
+	/* Specifies where the data values accociated with index can accessed in the vertex shader */
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
 	/* Enable  the vertex array associated with the index*/
