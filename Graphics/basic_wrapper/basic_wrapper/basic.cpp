@@ -55,7 +55,7 @@ void init(GLWrapper *glw)
 	glGenBuffers(1, &colourObject);
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColours), vertexColours, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 1);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	try
 	{
@@ -74,12 +74,16 @@ void init(GLWrapper *glw)
 //You should call glfwSwapBuffers() after all of your rendering to display what you rendered.
 void display()
 {
+	//updates the vertex positions. 
+
 	vertexPositions[0] = x1;
 	vertexPositions[4] = x2;
 	vertexPositions[8] = x3;
 	std::cout << "x1: " << vertexPositions[0] << std::endl;
 	std::cout << "x2: " << vertexPositions[4] << std::endl;
 	std::cout << "x3: " << vertexPositions[8] << std::endl;
+
+
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
