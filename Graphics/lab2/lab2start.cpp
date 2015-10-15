@@ -18,6 +18,7 @@ if you prefer */
    also includes the OpenGL extension initialisation*/
 #include "wrapper_glfw.h"
 #include <iostream>
+#include "cube.h";
 
 /* GLM core */
 #include <glm/glm.hpp>
@@ -27,9 +28,8 @@ if you prefer */
 GLuint positionBufferObject, colourObject;
 GLuint program;
 GLuint vao;
-
-/* Position and view globals */
-GLfloat angle_x, angle_x_inc, angle_y, angle_y_inc;
+cube* cube1;
+cube* cube2;
 
 /* Uniforms*/
 GLuint modelID;
@@ -47,11 +47,6 @@ void init(GLWrapper *glw)
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-
-	angle_x = 0;
-	angle_x_inc = 0;
-	angle_y = 0;
-	angle_y_inc = 0;
 
 	// Generate index (name) for one vertex array object
 	glGenVertexArrays(1, &vao);
@@ -156,6 +151,12 @@ void init(GLWrapper *glw)
 		0.0f, 1.0f, 1.0f, 1.0f,
 	};
 
+	//create objects;
+	cube1 = new cube(vertexPositions);
+	cube1->set_x_translate(-0.70);
+	cube2 = new cube(vertexPositions);
+	cube2->set_x_translate((0.70));
+
 	/* Create a vertex buffer object to store vertices */
 	glGenBuffers(1, &positionBufferObject);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
@@ -167,7 +168,6 @@ void init(GLWrapper *glw)
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColours), vertexColours, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 	glEnable(GL_DEPTH_TEST);
 
 	try
@@ -214,9 +214,7 @@ void display()
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// Model matrix : an identity matrix (model will be at the origin)
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(model, -angle_y, glm::vec3(0, 1, 0));
-	model = glm::rotate(model, -angle_x, glm::vec3(1, 0, 0)); //rotating in clockwise direction around x-axis
+	glm::mat4 model = cube1->get_model();
 
 	// Send our transformations to the currently bound shader,
 	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
@@ -227,8 +225,8 @@ void display()
 	glUseProgram(0);
 
 	/* Modify our animation variables */
-	angle_x += angle_x_inc;
-	angle_y += angle_y_inc;
+	cube1->set_angle_x(cube1->get_angle_x() + cube1->get_angle_x_inc());
+	cube1->set_angle_y(cube1->get_angle_y() + cube1->get_angle_y_inc());
 }
 
 
@@ -241,14 +239,51 @@ static void reshape(GLFWwindow* window, int w, int h)
 /* change view angle, exit upon ESC */
 static void keyCallback(GLFWwindow* window, int k, int s, int action, int mods)
 {
+	const GLfloat modifer = 0.1f;
+
 	if (action != GLFW_PRESS) return;
 	if (k == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
-	if (k == GLFW_KEY_DOWN && action == GLFW_PRESS) angle_x_inc += 0.1f;
-	if (k == GLFW_KEY_UP) angle_x_inc -= 0.1f;
-	if (k == GLFW_KEY_RIGHT) angle_y_inc += 0.1f;
-	if (k == GLFW_KEY_LEFT) angle_y_inc -= 0.1f;
+	switch (k)
+	{
+	case GLFW_KEY_DOWN:
+		cube1->set_angle_x_inc(cube1->get_angle_x_inc() + modifer);
+		break;
+	case GLFW_KEY_UP:
+		cube1->set_angle_x_inc(cube1->get_angle_x_inc() - modifer);
+		break;
+	case GLFW_KEY_RIGHT:
+		cube1->set_angle_y_inc(cube1->get_angle_y_inc() + modifer);
+		break;
+	case GLFW_KEY_LEFT:
+		cube1->set_angle_y_inc(cube1->get_angle_y_inc() - modifer);
+		break;
+	case GLFW_KEY_KP_ADD:
+		cube1->set_scale_value(cube1->get_scale_value() + modifer);
+		break;
+	case GLFW_KEY_KP_SUBTRACT:
+		cube1->set_scale_value(cube1->get_scale_value() - modifer);
+		break;
+	case GLFW_KEY_A:
+		cube1->set_x_translate(cube1->get_x_translate() - modifer);
+		break;
+	case GLFW_KEY_D:
+		cube1->set_x_translate(cube1->get_x_translate() + modifer);
+		break;
+	case GLFW_KEY_W:
+		cube1->set_y_translate(cube1->get_y_translate() + modifer);
+		break;
+	case GLFW_KEY_S:
+		cube1->set_y_translate(cube1->get_y_translate() - modifer);
+		break;
+	case GLFW_KEY_Z:
+		cube1->set_z_translate(cube1->get_z_translate() + modifer);
+		break;
+	case GLFW_KEY_X:
+		cube1->set_z_translate(cube1->get_z_translate() - modifer);
+		break;
+	}
 }
 
 /* An error callback function to output GLFW errors*/

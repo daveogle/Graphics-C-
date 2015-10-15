@@ -75,10 +75,12 @@
     <None Include="lab2.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cube.cpp" />
     <ClCompile Include="lab2start.cpp" />
     <ClCompile Include="wrapper_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cube.h" />
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
