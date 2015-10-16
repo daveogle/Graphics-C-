@@ -13,9 +13,10 @@ class cube
 	/* Position and view globals */
 	GLfloat angle_x, angle_x_inc, angle_y, angle_y_inc, scale_value, x_tanslate, y_tanslate, z_tanslate;
 	GLfloat vertexPositions[144];
+	GLuint positionBufferObject;
 
 public:
-	explicit cube(GLfloat vertexPositions[]);
+	explicit cube();
 	~cube();
 	GLfloat get_angle_x();
 	GLfloat get_angle_x_inc();
@@ -26,6 +27,8 @@ public:
 	GLfloat get_y_translate();
 	GLfloat get_z_translate();
 	glm::mat4 get_model();
+	GLfloat* get_vertexPositions();
+	GLuint get_positionBufferObject();
 	void set_angle_x(GLfloat x);
 	void set_angle_x_inc(GLfloat x_inc);
 	void set_angle_y(GLfloat y);

@@ -25,7 +25,7 @@ if you prefer */
 #include "glm/gtc/matrix_transform.hpp"
 //#include <glm/gtc/type_ptr.hpp>
 
-GLuint positionBufferObject, colourObject;
+GLuint positionBufferObject1, positionBufferObject2, colourObject;
 GLuint program;
 GLuint vao;
 cube* cube1;
@@ -53,58 +53,6 @@ void init(GLWrapper *glw)
 
 	// Create the vertex array object and make it current
 	glBindVertexArray(vao);
-
-	/* Define vertices for a cube in 12 triangles */
-	GLfloat vertexPositions[] =
-	{
-		-0.25f, 0.25f, -0.25f, 1.f,
-		-0.25f, -0.25f, -0.25f, 1.f,
-		0.25f, -0.25f, -0.25f, 1.f,
-
-		0.25f, -0.25f, -0.25f, 1.f,
-		0.25f, 0.25f, -0.25f, 1.f,
-		-0.25f, 0.25f, -0.25f, 1.f,
-
-		0.25f, -0.25f, -0.25f, 1.f,
-		0.25f, -0.25f, 0.25f, 1.f,
-		0.25f, 0.25f, -0.25f, 1.f,
-
-		0.25f, -0.25f, 0.25f, 1.f,
-		0.25f, 0.25f, 0.25f, 1.f,
-		0.25f, 0.25f, -0.25f, 1.f,
-
-		0.25f, -0.25f, 0.25f, 1.f,
-		-0.25f, -0.25f, 0.25f, 1.f,
-		0.25f, 0.25f, 0.25f, 1.f,
-
-		-0.25f, -0.25f, 0.25f, 1.f,
-		-0.25f, 0.25f, 0.25f, 1.f,
-		0.25f, 0.25f, 0.25f, 1.f,
-
-		-0.25f, -0.25f, 0.25f, 1.f,
-		-0.25f, -0.25f, -0.25f, 1.f,
-		-0.25f, 0.25f, 0.25f, 1.f,
-
-		-0.25f, -0.25f, -0.25f, 1.f,
-		-0.25f, 0.25f, -0.25f, 1.f,
-		-0.25f, 0.25f, 0.25f, 1.f,
-
-		-0.25f, -0.25f, 0.25f, 1.f,
-		0.25f, -0.25f, 0.25f, 1.f,
-		0.25f, -0.25f, -0.25f, 1.f,
-
-		0.25f, -0.25f, -0.25f, 1.f,
-		-0.25f, -0.25f, -0.25f, 1.f,
-		-0.25f, -0.25f, 0.25f, 1.f,
-
-		-0.25f, 0.25f, -0.25f, 1.f,
-		0.25f, 0.25f, -0.25f, 1.f,
-		0.25f, 0.25f, 0.25f, 1.f,
-
-		0.25f, 0.25f, 0.25f, 1.f,
-		-0.25f, 0.25f, 0.25f, 1.f,
-		-0.25f, 0.25f, -0.25f, 1.f
-	};
 
 	/* Define an array of colours */
 	float vertexColours[] = {
@@ -152,16 +100,12 @@ void init(GLWrapper *glw)
 	};
 
 	//create objects;
-	cube1 = new cube(vertexPositions);
-	cube1->set_x_translate(-0.70);
-	cube2 = new cube(vertexPositions);
-	cube2->set_x_translate((0.70));
-
-	/* Create a vertex buffer object to store vertices */
-	glGenBuffers(1, &positionBufferObject);
-	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	cube1 = new cube();
+	cube1->set_x_translate(-0.50);
+	positionBufferObject1 = cube1->get_positionBufferObject();
+	cube2 = new cube();
+	cube2->set_x_translate((0.50));
+	positionBufferObject2 = cube2->get_positionBufferObject();
 
 	/* Create a vertex buffer object to store vertex colours */
 	glGenBuffers(1, &colourObject);
@@ -191,15 +135,15 @@ void display()
 {
 	/* Define the background colour */
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
 	/* Clear the colour and frame buffers */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(program);
 
-	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
+	//bind the buffer to the context using GL_ARRAY_BUFFER as a binding point
+	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject1);
+	//enable automatic filling of the attribute
 	glEnableVertexAttribArray(0);
-
 	/* glVertexAttribPointer(index, size, type, normalised, stride, pointer) 
 	   index relates to the layout qualifier in the vertex shader and in 
 	   glEnableVertexAttribArray() and glDisableVertexAttribArray() */
@@ -207,17 +151,27 @@ void display()
 
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glEnableVertexAttribArray(1);
-
-	/* glVertexAttribPointer(index, size, type, normalised, stride, pointer)
-	index relates to the layout qualifier in the vertex shader and in
-	glEnableVertexAttribArray() and glDisableVertexAttribArray() */
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// Model matrix : an identity matrix (model will be at the origin)
-	glm::mat4 model = cube1->get_model();
-
+	glm::mat4 model1 = cube1->get_model();
 	// Send our transformations to the currently bound shader,
-	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
+	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model1[0][0]);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject2);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// Model matrix : an identity matrix (model will be at the origin)
+	glm::mat4 model2 = cube2->get_model();
+	// Send our transformations to the currently bound shader,
+	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model2[0][0]);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -227,6 +181,8 @@ void display()
 	/* Modify our animation variables */
 	cube1->set_angle_x(cube1->get_angle_x() + cube1->get_angle_x_inc());
 	cube1->set_angle_y(cube1->get_angle_y() + cube1->get_angle_y_inc());
+	cube2->set_angle_x(cube2->get_angle_x() + cube2->get_angle_x_inc());
+	cube2->set_angle_y(cube2->get_angle_y() + cube2->get_angle_y_inc());
 }
 
 
@@ -249,15 +205,19 @@ static void keyCallback(GLFWwindow* window, int k, int s, int action, int mods)
 	{
 	case GLFW_KEY_DOWN:
 		cube1->set_angle_x_inc(cube1->get_angle_x_inc() + modifer);
+		cube2->set_angle_x_inc(cube2->get_angle_x_inc() + modifer);
 		break;
 	case GLFW_KEY_UP:
 		cube1->set_angle_x_inc(cube1->get_angle_x_inc() - modifer);
+		cube2->set_angle_x_inc(cube2->get_angle_x_inc() - modifer);
 		break;
 	case GLFW_KEY_RIGHT:
 		cube1->set_angle_y_inc(cube1->get_angle_y_inc() + modifer);
+		cube2->set_angle_y_inc(cube2->get_angle_y_inc() + modifer);
 		break;
 	case GLFW_KEY_LEFT:
 		cube1->set_angle_y_inc(cube1->get_angle_y_inc() - modifer);
+		cube2->set_angle_y_inc(cube2->get_angle_y_inc() - modifer);
 		break;
 	case GLFW_KEY_KP_ADD:
 		cube1->set_scale_value(cube1->get_scale_value() + modifer);

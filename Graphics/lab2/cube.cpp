@@ -3,7 +3,7 @@
 #pragma comment(lib, "glloadD.lib")
 #pragma comment(lib, "opengl32.lib")
 
-cube::cube(GLfloat vertexPositions[144])
+cube::cube()
 {
 	this->angle_x = 0;
 	this->angle_x_inc = 0;
@@ -14,12 +14,69 @@ cube::cube(GLfloat vertexPositions[144])
 	this->y_tanslate = 0;
 	this->z_tanslate = 0;
 
+	GLfloat vertexPositions[] =
+	{
+		-0.25f, 0.25f, -0.25f, 1.f,
+		-0.25f, -0.25f, -0.25f, 1.f,
+		0.25f, -0.25f, -0.25f, 1.f,
+
+		0.25f, -0.25f, -0.25f, 1.f,
+		0.25f, 0.25f, -0.25f, 1.f,
+		-0.25f, 0.25f, -0.25f, 1.f,
+
+		0.25f, -0.25f, -0.25f, 1.f,
+		0.25f, -0.25f, 0.25f, 1.f,
+		0.25f, 0.25f, -0.25f, 1.f,
+
+		0.25f, -0.25f, 0.25f, 1.f,
+		0.25f, 0.25f, 0.25f, 1.f,
+		0.25f, 0.25f, -0.25f, 1.f,
+
+		0.25f, -0.25f, 0.25f, 1.f,
+		-0.25f, -0.25f, 0.25f, 1.f,
+		0.25f, 0.25f, 0.25f, 1.f,
+
+		-0.25f, -0.25f, 0.25f, 1.f,
+		-0.25f, 0.25f, 0.25f, 1.f,
+		0.25f, 0.25f, 0.25f, 1.f,
+
+		-0.25f, -0.25f, 0.25f, 1.f,
+		-0.25f, -0.25f, -0.25f, 1.f,
+		-0.25f, 0.25f, 0.25f, 1.f,
+
+		-0.25f, -0.25f, -0.25f, 1.f,
+		-0.25f, 0.25f, -0.25f, 1.f,
+		-0.25f, 0.25f, 0.25f, 1.f,
+
+		-0.25f, -0.25f, 0.25f, 1.f,
+		0.25f, -0.25f, 0.25f, 1.f,
+		0.25f, -0.25f, -0.25f, 1.f,
+
+		0.25f, -0.25f, -0.25f, 1.f,
+		-0.25f, -0.25f, -0.25f, 1.f,
+		-0.25f, -0.25f, 0.25f, 1.f,
+
+		-0.25f, 0.25f, -0.25f, 1.f,
+		0.25f, 0.25f, -0.25f, 1.f,
+		0.25f, 0.25f, 0.25f, 1.f,
+
+		0.25f, 0.25f, 0.25f, 1.f,
+		-0.25f, 0.25f, 0.25f, 1.f,
+		-0.25f, 0.25f, -0.25f, 1.f
+	};
+
 	#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 	for (auto i = 0; i < ARRAY_SIZE(vertexPositions); i++)
 	{
 		this->vertexPositions[i] = vertexPositions[i];
 	}
+
+	/* Create a vertex buffer object to store vertices */
+	glGenBuffers(1, &this->positionBufferObject);
+	glBindBuffer(GL_ARRAY_BUFFER, this->positionBufferObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 cube::~cube()
@@ -74,6 +131,16 @@ glm::mat4 cube::get_model()
 	model = glm::rotate(model, -angle_y, glm::vec3(0, 1, 0));
 	model = glm::rotate(model, -angle_x, glm::vec3(1, 0, 0)); //rotating in clockwise direction around x-axis
 	return model;
+}
+
+GLfloat* cube::get_vertexPositions()
+{
+	return this->vertexPositions;
+}
+
+GLuint cube::get_positionBufferObject()
+{
+	return this->positionBufferObject;
 }
 
 void cube::set_angle_x(GLfloat x)
