@@ -5,9 +5,9 @@
 
 cube::cube()
 {
-	this->angle_x = 0;
+	this->angle_x = 14.5;
 	this->angle_x_inc = 0;
-	this->angle_y = 0;
+	this->angle_y = 14.5;
 	this->angle_y_inc = 0;
 	this->scale_value = 1;
 	this->x_tanslate = 0;
