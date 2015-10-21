@@ -179,7 +179,6 @@ void display()
 	glUseProgram(0);
 
 	/* Modify animation variables */
-	std::cout << "y angle = : " << cube1->get_angle_y() << std::endl;
 	cube1->set_angle_x(cube1->get_angle_x() + cube1->get_angle_x_inc());
 	cube1->set_angle_y(cube1->get_angle_y() + cube1->get_angle_y_inc());
 	cube2->set_angle_x(cube2->get_angle_x() + cube2->get_angle_x_inc());
