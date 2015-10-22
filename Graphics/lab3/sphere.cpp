@@ -2,8 +2,8 @@
 
 sphere::sphere()
 {
-	numlats = 20;		// Number of latitudes in our sphere
-	numlongs = 20;		// Number of longitudes in our sphere
+	numlats = 200;		// Number of latitudes in our sphere
+	numlongs = 200;		// Number of longitudes in our sphere
 	makeSphereVBO();
 };
 

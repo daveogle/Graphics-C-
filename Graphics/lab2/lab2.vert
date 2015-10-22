@@ -11,7 +11,6 @@ uniform mat4 view;
 void main()
 {
 	gl_Position = perspective * view * model * position;
-	
 	fcolour = colour;
 	//fcolour = position * 2.0 + vec4(0.5, 0.5, 0.5, 1.0);
 }
