@@ -37,10 +37,10 @@ GLuint colourmode;	/* Index of a uniform to switch the colour mode in the vertex
 GLfloat angle_x, angle_inc_x, x, scale, z, y, ambient_value;
 GLfloat angle_y, angle_inc_y, angle_z, angle_inc_z;
 /* Uniforms*/
-GLuint projectionID, modelViewID, normal_matrixID;
+GLuint projectionID, modelViewID, normal_matrixID, shininessID;
 GLuint colourmodeID, ambientID, light_dirID;
 glm::vec3 lightDirection;
-GLfloat aspect_ratio;		/* Aspect ratio of the window defined in the reshape callback*/
+GLfloat aspect_ratio, shininess;		/* Aspect ratio of the window defined in the reshape callback*/
 sphere* new_sphere;
 /*
 This function is called before entering the main rendering loop.
@@ -71,6 +71,8 @@ void init(GLWrapper *glw)
 	std::cout << "Key 'N' = move cube forward" << std::endl;
 	std::cout << "Key '1' = increase ambient value" << std::endl;
 	std::cout << "Key '2' = decrease ambient value" << std::endl;
+	std::cout << "Key '3' = increase shininess value" << std::endl;
+	std::cout << "Key '4' = decrease shininess value" << std::endl;
 	std::cout << "Key 'M' = change colour mode" << std::endl;
 	std::cout << "Key 'F' = change draw mode" << std::endl;
 
@@ -78,13 +80,14 @@ void init(GLWrapper *glw)
 	x = 0.05f;
 	y = 0;
 	z = 0;
+	shininess = 0.5;
 	angle_x = angle_y = angle_z = 0;
 	angle_inc_x = angle_inc_y = angle_inc_z = 0;
 	scale = 1.f;
 	aspect_ratio = 1024.f / 768.f;	// Initial aspect ratio from window size (variables would be better!)
 	colourmode = 0;
 	ambient_value = 0.2;
-	lightDirection = glm::vec3(100.0, 100.0, 100.0);
+	lightDirection = glm::vec3(1.0, 0.0, 1.0);
 	// Generate index (name) for one vertex array object
 	glGenVertexArrays(1, &vao);
 
@@ -242,6 +245,7 @@ void init(GLWrapper *glw)
 	projectionID = glGetUniformLocation(program, "projection");
 	modelViewID = glGetUniformLocation(program, "model_view");
 	ambientID = glGetUniformLocation(program, "ambient");
+	shininessID = glGetUniformLocation(program, "shininess");
 	light_dirID = glGetUniformLocation(program, "light_dir");
 	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
 }
@@ -307,6 +311,7 @@ void display()
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &Projection[0][0]);
 	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
 	glUniform1f(ambientID, ambient_value);
+	glUniform1f(shininessID, shininess);
 	glUniform3f(light_dirID, lightDirection[0], lightDirection[1], lightDirection[2]);
 	/* Draw our cube*/
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -369,6 +374,8 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == 'N') z += 0.05f;
 	if (key == GLFW_KEY_2) ambient_value += 0.02;
 	if (key == GLFW_KEY_1) ambient_value -= 0.02;
+	if (key == GLFW_KEY_3) shininess += 0.02;
+	if (key == GLFW_KEY_4) shininess -= 0.02;
 
 	if (key == 'M' && action != GLFW_PRESS)
 	{
