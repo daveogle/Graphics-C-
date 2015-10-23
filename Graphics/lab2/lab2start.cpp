@@ -171,8 +171,6 @@ void display()
 	perspective = glm::perspective(30.0f, 1.0f, 0.1f, 100.0f);
 	// Send our transformations to the currently bound shader,
 	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
-	//glUniformMatrix4fv(perspectiveID, 1, GL_FALSE, &perspective[0][0]);
-	//glUniformMatrix4fv(viewID, 1, GL_FALSE, &view[0][0]);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDisableVertexAttribArray(0);
