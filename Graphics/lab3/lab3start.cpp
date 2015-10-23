@@ -387,7 +387,7 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == 'V') y += 0.05f;
 	if (key == 'B') z -= 0.05f;
 	if (key == 'N') z += 0.05f;
-	if (key == 'H') emit = !emit;
+	if (key == 'H' && action==GLFW_PRESS) emit = !emit;
 	if (key == GLFW_KEY_LEFT) lightDirection[0] -= 10.0;
 	if (key == GLFW_KEY_RIGHT) lightDirection[0] += 10.0;
 	if (key == GLFW_KEY_DOWN) lightDirection[1] -= 10.0;

@@ -121,14 +121,12 @@ void GLWrapper::setReshapeCallback(void(*func)(GLFWwindow* window, int w, int h)
 	glfwSetFramebufferSizeCallback(window, reshape);
 }
 
-
 /* Register a callback to respond to keyboard events */
 void GLWrapper::setKeyCallback(void(*func)(GLFWwindow* window, int key, int scancode, int action, int mods))
 {
 	keyCallBack = func;
 	glfwSetKeyCallback(window, keyCallBack);
 }
-
 
 /* Build shaders from strings containing shader source code */
 GLuint GLWrapper::BuildShader(GLenum eShaderType, const std::string &shaderText)
