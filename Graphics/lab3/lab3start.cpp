@@ -29,7 +29,7 @@ also includes the OpenGL extension initialisation*/
 GLuint positionBufferObject, colourObject, normalsBufferObject;
 GLuint program;		/* Identifier for the shader program */
 GLuint vao;			/* Vertex array (Container) object. This is the index of the VAO that will be the container for our buffer objects*/
-GLuint colourmode;	/* Index of a uniform to switch the colour mode in the vertex shader
+GLuint colourmode, lightmode;	/* Index of a uniform to switch the colour mode in the vertex shader
 					I've included this to show you how to pass in an unsigned integer into
 					your vertex shader. */
 
@@ -38,8 +38,9 @@ GLfloat angle_x, angle_inc_x, x, scale, z, y, ambient_value;
 GLfloat angle_y, angle_inc_y, angle_z, angle_inc_z;
 /* Uniforms*/
 GLuint projectionID, modelViewID, normal_matrixID, shininessID;
-GLuint colourmodeID, ambientID, light_dirID;
+GLuint colourmodeID, ambientID, light_dirID, lightmodeID, emitID;
 glm::vec3 lightDirection;
+GLboolean emit;
 GLfloat aspect_ratio, shininess;		/* Aspect ratio of the window defined in the reshape callback*/
 sphere* new_sphere;
 /*
@@ -74,20 +75,28 @@ void init(GLWrapper *glw)
 	std::cout << "Key '3' = increase shininess value" << std::endl;
 	std::cout << "Key '4' = decrease shininess value" << std::endl;
 	std::cout << "Key 'M' = change colour mode" << std::endl;
+	std::cout << "Key 'L' = change light mode" << std::endl;
 	std::cout << "Key 'F' = change draw mode" << std::endl;
+	std::cout << "Key 'LEFT' = change draw mode" << std::endl;
+	std::cout << "Key 'RIGHT' = change draw mode" << std::endl;
+	std::cout << "Key 'UP' = change draw mode" << std::endl;
+	std::cout << "Key 'DOWN' = change draw mode" << std::endl;
+	std::cout << "Key 'H' = emisive light" << std::endl;
 
 	/* Set the object transformation controls to their initial values */
 	x = 0.05f;
 	y = 0;
 	z = 0;
-	shininess = 0.5;
+	emit = false;
+	shininess = 20.0;
 	angle_x = angle_y = angle_z = 0;
 	angle_inc_x = angle_inc_y = angle_inc_z = 0;
 	scale = 1.f;
 	aspect_ratio = 1024.f / 768.f;	// Initial aspect ratio from window size (variables would be better!)
 	colourmode = 0;
+	lightmode = 0;
 	ambient_value = 0.2;
-	lightDirection = glm::vec3(1.0, 0.0, 1.0);
+	lightDirection = glm::vec3(0.0, 0.0, 100.0);
 	// Generate index (name) for one vertex array object
 	glGenVertexArrays(1, &vao);
 
@@ -242,11 +251,13 @@ void init(GLWrapper *glw)
 
 	/* Define uniforms to send to vertex shader */
 	colourmodeID = glGetUniformLocation(program, "colourmode");
+	lightmodeID = glGetUniformLocation(program, "lightmode");
 	projectionID = glGetUniformLocation(program, "projection");
 	modelViewID = glGetUniformLocation(program, "model_view");
 	ambientID = glGetUniformLocation(program, "ambient");
 	shininessID = glGetUniformLocation(program, "shininess");
 	light_dirID = glGetUniformLocation(program, "light_dir");
+	emitID = glGetUniformLocation(program, "emit");
 	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
 }
 
@@ -304,15 +315,18 @@ void display()
 	//4. define mat3 normal model_view trasformation matrix
 	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
 	//normalize the light direction
-	lightDirection = glm::normalize(lightDirection);
+	//lightDirection = glm::normalize(lightDirection);
+
 	// Send our uniforms variables to the currently bound shader,
 	glUniform1ui(colourmodeID, colourmode);
+	glUniform1ui(lightmodeID, lightmode);
 	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &Projection[0][0]);
 	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
 	glUniform1f(ambientID, ambient_value);
 	glUniform1f(shininessID, shininess);
 	glUniform3f(light_dirID, lightDirection[0], lightDirection[1], lightDirection[2]);
+	glUniform1i(emitID, 0);
 	/* Draw our cube*/
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -328,6 +342,7 @@ void display()
 	//define the normal model-view matrix
 	normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
 	/* Draw our sphere */
+	glUniform1i(emitID, emit);
 	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
 	glUniformMatrix4fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
 
@@ -372,10 +387,23 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == 'V') y += 0.05f;
 	if (key == 'B') z -= 0.05f;
 	if (key == 'N') z += 0.05f;
+	if (key == 'H') emit = !emit;
+	if (key == GLFW_KEY_LEFT) lightDirection[0] -= 10.0;
+	if (key == GLFW_KEY_RIGHT) lightDirection[0] += 10.0;
+	if (key == GLFW_KEY_DOWN) lightDirection[1] -= 10.0;
+	if (key == GLFW_KEY_UP) lightDirection[1] += 10.0;
+	if (key == 'L' && action != GLFW_PRESS)
+	{
+		lightmode++;
+		if (lightmode == 3)
+			lightmode = 0;
+
+		std::cout << "lightmode= " << lightmode+1<< std::endl;
+	}
 	if (key == GLFW_KEY_2) ambient_value += 0.02;
 	if (key == GLFW_KEY_1) ambient_value -= 0.02;
-	if (key == GLFW_KEY_3) shininess += 0.02;
-	if (key == GLFW_KEY_4) shininess -= 0.02;
+	if (key == GLFW_KEY_3) shininess += 5.0;
+	if (key == GLFW_KEY_4) shininess -= 5.0;
 
 	if (key == 'M' && action != GLFW_PRESS)
 	{
