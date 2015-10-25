@@ -11,10 +11,14 @@ also includes the OpenGL extension initialisation*/
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtc/type_ptr.hpp>
+#include "cylinder.h"
+#include "cuboid.h"
 
-GLuint program;				/* Identifier for the shader program */
+GLuint program, vao;		/*shader & vertex array object*/
 GLfloat aspect_ratio;		/* Aspect ratio of the window defined in the reshape callback*/
-int width, height;
+int width, height;			/*window width & height*/
+//cylinder* testCylinder;
+cuboid* testCube;
 
 void init(wrapper_glfw *glw)
 {
@@ -24,7 +28,7 @@ void init(wrapper_glfw *glw)
 	fprintf(stderr, "RENDERER: %s\n", (char *)glGetString(GL_RENDERER));
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-	std::cout << width << '\n' << height << '\n';
+	std::cout << "WINDOW SIZE = " << width << ':' << height << '\n';
 
 	try
 	{
@@ -36,6 +40,15 @@ void init(wrapper_glfw *glw)
 		std::cin.ignore();
 		exit(0);
 	}
+
+	// Generate index (name) for one vertex array object
+	glGenVertexArrays(1, &vao);
+
+	// Create the vertex array object and make it current
+	glBindVertexArray(vao);
+
+	//testCylinder = new cylinder(1.0, 1.0, 100);
+	testCube = new cuboid(0.5, 0.5, 0.5);
 }
 
 void display()
@@ -51,6 +64,11 @@ void display()
 
 	/* Make the compiled shader program current */
 	glUseProgram(program);
+
+	//testCylinder->drawCyclinder();
+	testCube->drawCuboid();
+
+	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
 
@@ -93,7 +111,6 @@ void getDesktopResolution(int& horizontal, int& vertical)
 int main(int argc, char* argv[])
 {
 	getDesktopResolution(width, height);
-	std::string a = "dsd";
 	char* message = "Dave Ogle - Assignment 1";
 	wrapper_glfw *glw = new wrapper_glfw(width, height, message);
 

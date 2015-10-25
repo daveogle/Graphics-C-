@@ -150,7 +150,6 @@ void display()
 	   index relates to the layout qualifier in the vertex shader and in 
 	   glEnableVertexAttribArray() and glDisableVertexAttribArray() */
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glBindBuffer(GL_ARRAY_BUFFER, colourObject);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);

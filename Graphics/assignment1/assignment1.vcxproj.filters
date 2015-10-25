@@ -16,9 +16,18 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{7f07ba17-3f93-4722-8fd8-e0cc175d5c05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shapes">
+      <UniqueIdentifier>{602dacf3-209d-4143-bb5f-74db1586ba93}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wrapper_glfw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cylinder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cuboid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -28,6 +37,12 @@
     </ClCompile>
     <ClCompile Include="run.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cylinder.cpp">
+      <Filter>Source Files\Shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="cuboid.cpp">
+      <Filter>Source Files\Shapes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
