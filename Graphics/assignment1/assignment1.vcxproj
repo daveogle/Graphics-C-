@@ -73,12 +73,14 @@
   <ItemGroup>
     <ClInclude Include="cuboid.h" />
     <ClInclude Include="cylinder.h" />
+    <ClInclude Include="transformation.h" />
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cuboid.cpp" />
     <ClCompile Include="cylinder.cpp" />
     <ClCompile Include="run.cpp" />
+    <ClCompile Include="transformation.cpp" />
     <ClCompile Include="wrapper_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>

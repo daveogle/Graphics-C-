@@ -10,25 +10,30 @@ also includes the OpenGL extension initialisation*/
 /* Include GLM core and matrix extensions*/
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
-#include <glm/gtc/type_ptr.hpp>
 #include "cylinder.h"
 #include "cuboid.h"
 
-GLuint program, vao;		/*shader & vertex array object*/
-GLfloat aspect_ratio;		/* Aspect ratio of the window defined in the reshape callback*/
-int width, height;			/*window width & height*/
+glm::mat4 projection;
+GLuint program, vao;			/*shader & vertex array object*/
+GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
+GLfloat width, height;			/*window width & height*/
+GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_dirID;
+glm::vec3 lightDirection;
 //cylinder* testCylinder;
 cuboid* testCube;
 
 void init(wrapper_glfw *glw)
 {
-	aspect_ratio = width / height;	// Initial aspect ratio from window size (variables would be better!)
+	aspect_ratio = width / height;
+	lightDirection = glm::vec3(100.0, 0.0, 100.0);
+
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
 	fprintf(stderr, "RENDERER: %s\n", (char *)glGetString(GL_RENDERER));
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	std::cout << "WINDOW SIZE = " << width << ':' << height << '\n';
+	std::cout << "Aspect Ratio  = " << aspect_ratio << '\n';
 
 	try
 	{
@@ -48,7 +53,20 @@ void init(wrapper_glfw *glw)
 	glBindVertexArray(vao);
 
 	//testCylinder = new cylinder(1.0, 1.0, 100);
-	testCube = new cuboid(0.5, 0.5, 0.5);
+	testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
+	testCube->setDiffuse(1.0, 0.0, 0.0);
+	testCube->transform->spin(0.5, 'z');
+	testCube->transform->spin(0.5, 'y');
+
+	//Uniform locations
+	projectionID = glGetUniformLocation(program, "projection");
+	modelViewID = glGetUniformLocation(program, "model_view");
+	shininessID = glGetUniformLocation(program, "shininess");
+	ambientID = glGetUniformLocation(program, "ambient_colour");
+	specularID = glGetUniformLocation(program, "specular_colour");
+	diffuseID = glGetUniformLocation(program, "diffuse_colour");
+	light_dirID = glGetUniformLocation(program, "light_dir");
+	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
 }
 
 void display()
@@ -65,7 +83,28 @@ void display()
 	/* Make the compiled shader program current */
 	glUseProgram(program);
 
-	//testCylinder->drawCyclinder();
+	glUniform3fv(light_dirID, 1, &lightDirection[0]);
+
+	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	projection = glm::perspective(30.0f, aspect_ratio, 0.1f, 100.0f);
+	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
+
+	glm::mat4 view = glm::lookAt(
+		glm::vec3(0, 0, 4), // Camera is at (0,0,4), in World Space
+		glm::vec3(0, 0, 0), // and looks at the origin
+		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
+	glm::mat4 model_view = view * testCube->getModel();
+	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
+	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+
+	glUniform3fv(ambientID, 1, &testCube->getAmbient()[0]);
+	glUniform1f(shininessID, testCube->getShininess());
+	glUniform3fv(specularID, 1, &testCube->getSpecular()[0]);
+	glUniform3fv(diffuseID, 1, &testCube->getDiffuse()[0]);
+
 	testCube->drawCuboid();
 
 	glDisableVertexAttribArray(0);
@@ -93,7 +132,7 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 /**
 * taken from http://stackoverflow.com/questions/8690619/how-to-get-screen-resolution-in-c
 */
-void getDesktopResolution(int& horizontal, int& vertical)
+void getDesktopResolution(GLfloat& horizontal, GLfloat& vertical)
 {
 	RECT desktop;
 	// Get a handle to the desktop window
