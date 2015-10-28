@@ -82,11 +82,18 @@ void transformation::scale(GLfloat amount, char plane)
 		this->scale_y_value = this->scale_y_value + amount;
 		break;
 	case 'z':
-		this->scale_y_value = this->scale_y_value + amount;
+		this->scale_z_value = this->scale_z_value + amount;
 		break;
 	default:
 		std::cout << "Error no plane " << plane << " was found" << std::endl;
 	}
+}
+
+void transformation::scaleUniform(GLfloat amount)
+{
+	this->scale_x_value = this->scale_x_value + amount;
+	this->scale_y_value = this->scale_y_value + amount;
+	this->scale_z_value = this->scale_z_value + amount;
 }
 
 void transformation::translate(GLfloat amount, char plane)

@@ -27,6 +27,7 @@ public:
 	glm::mat4 getModel();
 	void rotate(GLfloat amount, char plane);
 	void scale(GLfloat amount, char plane);
+	void scaleUniform(GLfloat amount);
 	void translate(GLfloat amount, char plane);
 	void spin(GLfloat increment, char plane);
 };

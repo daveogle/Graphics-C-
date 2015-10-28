@@ -71,12 +71,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="sphere.h" />
+    <ClInclude Include="sphere_lab.h" />
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lab3start.cpp" />
-    <ClCompile Include="sphere.cpp" />
+    <ClCompile Include="sphere_lab.cpp" />
     <ClCompile Include="wrapper_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>

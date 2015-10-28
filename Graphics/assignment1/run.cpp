@@ -12,6 +12,7 @@ also includes the OpenGL extension initialisation*/
 #include "glm/gtc/matrix_transform.hpp"
 #include "cylinder.h"
 #include "cuboid.h"
+#include "sphere.h"
 
 glm::mat4 projection;
 GLuint program, vao;			/*shader & vertex array object*/
@@ -21,6 +22,7 @@ GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specu
 glm::vec3 lightDirection;
 //cylinder* testCylinder;
 cuboid* testCube;
+sphere* testSphere;
 
 void init(wrapper_glfw *glw)
 {
@@ -54,15 +56,22 @@ void init(wrapper_glfw *glw)
 
 	//testCylinder = new cylinder(1.0, 1.0, 100);
 	testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
-	testCube->setDiffuse(1.0, 0.0, 0.0);
+	testCube->light->setDiffuse(1.0, 0.0, 0.0);
+	testCube->transform->translate(1.0, 'x');
 	testCube->transform->spin(0.5, 'z');
 	testCube->transform->spin(0.5, 'y');
+
+	testSphere = new sphere(200, 200, 0.05, 20.0);
+	testSphere->light->setDiffuse(0.0, 1.0, 0.0);
+	testSphere->transform->translate(-1.0, 'x');
+	testSphere->transform->scaleUniform(-0.7);
+	testSphere->transform->spin(-0.5, 'y');
 
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
 	modelViewID = glGetUniformLocation(program, "model_view");
 	shininessID = glGetUniformLocation(program, "shininess");
-	ambientID = glGetUniformLocation(program, "ambient_colour");
+	ambientID = glGetUniformLocation(program, "ambient");
 	specularID = glGetUniformLocation(program, "specular_colour");
 	diffuseID = glGetUniformLocation(program, "diffuse_colour");
 	light_dirID = glGetUniformLocation(program, "light_dir");
@@ -95,17 +104,29 @@ void display()
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 
-	glm::mat4 model_view = view * testCube->getModel();
+	glm::mat4 model_view = view * testCube->transform->getModel();
 	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
 	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
 	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
 
-	glUniform3fv(ambientID, 1, &testCube->getAmbient()[0]);
-	glUniform1f(shininessID, testCube->getShininess());
-	glUniform3fv(specularID, 1, &testCube->getSpecular()[0]);
-	glUniform3fv(diffuseID, 1, &testCube->getDiffuse()[0]);
+	glUniform1f(ambientID, testCube->light->getAmbient());
+	glUniform1f(shininessID, testCube->light->getShininess());
+	glUniform3fv(specularID, 1, &testCube->light->getSpecular()[0]);
+	glUniform3fv(diffuseID, 1, &testCube->light->getDiffuse()[0]);
 
 	testCube->drawCuboid();
+
+	model_view = view * testSphere->transform->getModel();
+	normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
+	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+
+	glUniform1f(ambientID, testSphere->light->getAmbient());
+	glUniform1f(shininessID, testSphere->light->getShininess());
+	glUniform3fv(specularID, 1, &testSphere->light->getSpecular()[0]);
+	glUniform3fv(diffuseID, 1, &testSphere->light->getDiffuse()[0]);
+
+	testSphere->drawSphere();
 
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);

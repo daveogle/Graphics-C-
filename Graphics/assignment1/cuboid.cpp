@@ -7,10 +7,7 @@ cuboid::cuboid(float height, float width, float depth, float ambient, float shin
 	this->height = height;
 	this->width = width;
 	this->depth = depth;
-	this->shininess = shininess;
-	this->ambient_value = glm::vec3(ambient);
-	this->specular_value = glm::vec3(1.0);
-	this->diffuse_value = glm::vec3(0.1, 0.1, 0.1);
+	this->light = new lighting(shininess, ambient);
 	defineVertices();
 	this->transform = new transformation();
 
@@ -179,39 +176,4 @@ void cuboid::drawCuboid()
 
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-
-glm::mat4 cuboid::getModel()
-{
-	return transform->getModel();
-}
-
-glm::vec3 cuboid::getAmbient()
-{
-	return this->ambient_value;
-}
-
-GLfloat cuboid::getShininess()
-{
-	return this->shininess;
-}
-
-glm::vec3 cuboid::getSpecular()
-{
-	return this->specular_value;
-}
-
-glm::vec3 cuboid::getDiffuse()
-{
-	return diffuse_value;
-}
-
-void cuboid::setSpecular(GLfloat colour_one, GLfloat colour_two, GLfloat colour_three)
-{
-	this->specular_value = glm::vec3(colour_one, colour_two, colour_three);
-}
-
-void cuboid::setDiffuse(GLfloat colour_one, GLfloat colour_two, GLfloat colour_three)
-{
-	this->diffuse_value = glm::vec3(colour_one, colour_two, colour_three);
 }

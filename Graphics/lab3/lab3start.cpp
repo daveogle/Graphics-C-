@@ -19,7 +19,7 @@ if you prefer */
 also includes the OpenGL extension initialisation*/
 #include "wrapper_glfw.h"
 #include <iostream>
-#include "sphere.h"
+#include "sphere_lab.h"
 /* Include GLM core and matrix extensions*/
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
@@ -42,7 +42,7 @@ GLuint colourmodeID, ambientID, light_dirID, lightmodeID, emitID;
 glm::vec3 lightDirection;
 GLboolean emit;
 GLfloat aspect_ratio, shininess;		/* Aspect ratio of the window defined in the reshape callback*/
-sphere* new_sphere;
+sphere_lab* new_sphere;
 /*
 This function is called before entering the main rendering loop.
 Use it for all your initialisation stuff
@@ -254,7 +254,7 @@ void init(GLWrapper *glw)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* create the sphere object */
-	new_sphere = new sphere();
+	new_sphere = new sphere_lab(200, 200);
 	/* Load and build the vertex and fragment shaders */
 	try
 	{
