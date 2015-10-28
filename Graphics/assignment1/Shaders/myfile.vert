@@ -8,35 +8,24 @@ layout(location = 1) in vec3 normal;
 
 // Uniform variables are passed in from the application
 uniform mat4 model_view, projection;
-uniform float shininess, ambient;
 uniform mat3 normal_matrix;
-uniform vec3 light_dir;
-uniform vec3 specular_colour, diffuse_colour;
+uniform vec3 light_pos;
 
 // Output the vertex colour - to be rasterized into pixel fragments
-out vec4 fcolour;
+out VS_OUT
+{
+	vec3 N;
+	vec3 L;
+	vec3 V;
+} vs_out;
 
 
 void main()
 {
-    vec4 ambient_colour = vec4(diffuse_colour * ambient, 1.0);
-	vec3 N = normal_matrix * normal;
 	vec4 P = model_view * position;
-	vec3 L = light_dir - P.xyz;
-	vec3 V = -P.xyz;
+	vs_out.N = normal_matrix * normal;
+	vs_out.L = light_pos - P.xyz;
+	vs_out.V = -P.xyz;
 
-	N = normalize(N);
-	L = normalize(L);
-	V = normalize(V);
-
-	//find diffuse component
-	vec4 diffuse = vec4(max(0.0, dot(N, L)) * diffuse_colour, 1.0);
-
-	//find half vector
-	vec3 H = normalize(L + V);	
-
-	vec4 specular = vec4(pow(max(dot(N, H), 0.0), shininess) * specular_colour, 1.0);
-
-	fcolour = specular + diffuse + ambient_colour;
-	gl_Position = projection * model_view * position;
+	gl_Position = projection * P;
 }

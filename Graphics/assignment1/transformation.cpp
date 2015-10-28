@@ -53,6 +53,11 @@ glm::mat4 transformation::getModel()
 	return model;
 }
 
+glm::vec3 transformation::getCoords()
+{
+	return glm::vec3(this->x_tanslate, this->y_tanslate, this->z_tanslate);
+}
+
 void transformation::rotate(GLfloat amount, char plane)
 {
 	switch (plane)

@@ -7,7 +7,8 @@ class lighting
 {
 
 	GLfloat shininess, ambient_value;
-	glm::vec3 specular_value, diffuse_value;
+	glm::vec3 specular_value, diffuse_value, emisive_value;
+	GLboolean emit;
 
 public:
 	lighting(GLfloat shininess, GLfloat ambient);
@@ -16,9 +17,12 @@ public:
 	GLfloat getShininess();
 	glm::vec3 getSpecular();
 	glm::vec3 getDiffuse();
+	glm::vec3 getEmisive();
+	void emitLight(GLboolean emit);
 	void setAmbient(GLfloat ambient);
 	void setShininess(GLfloat shininess);
 	void setSpecular(GLfloat colour_one, GLfloat colour_two, GLfloat colour_three);
 	void setDiffuse(GLfloat colour_one, GLfloat colour_two, GLfloat colour_three);
+	void setEmisive(GLfloat colour_one, GLfloat colour_two, GLfloat colour_three);
 };
 
