@@ -25,6 +25,7 @@ public:
 		GLfloat x_tanslate, GLfloat y_tanslate, GLfloat z_tanslate);
 	~transformation();
 	glm::mat4 getModel();
+	glm::vec3 getCoords();
 	void rotate(GLfloat amount, char plane);
 	void scale(GLfloat amount, char plane);
 	void scaleUniform(GLfloat amount);

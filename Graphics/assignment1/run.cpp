@@ -18,16 +18,18 @@ glm::mat4 projection;
 GLuint program, vao;			/*shader & vertex array object*/
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
-GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_dirID;
-glm::vec3 lightDirection;
+GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID;
+glm::vec3 lightPosition, global_ambient;
 //cylinder* testCylinder;
 cuboid* testCube;
 sphere* testSphere;
+sphere* theLight;
 
 void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
-	lightDirection = glm::vec3(100.0, 0.0, 100.0);
+	lightPosition = glm::vec3(100.0, 0.0, 50.0);
+	global_ambient = glm::vec3(0.05);
 
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -55,6 +57,12 @@ void init(wrapper_glfw *glw)
 	glBindVertexArray(vao);
 
 	//testCylinder = new cylinder(1.0, 1.0, 100);
+
+	theLight = new sphere(200, 200, 0.5, 10.0);
+	theLight->light->setDiffuse(1.0, 1.0, 1.0);
+	theLight->light->emitLight(true);
+	theLight->transform->scaleUniform(-0.9);
+
 	testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
 	testCube->light->setDiffuse(1.0, 0.0, 0.0);
 	testCube->transform->translate(1.0, 'x');
@@ -74,8 +82,24 @@ void init(wrapper_glfw *glw)
 	ambientID = glGetUniformLocation(program, "ambient");
 	specularID = glGetUniformLocation(program, "specular_colour");
 	diffuseID = glGetUniformLocation(program, "diffuse_colour");
-	light_dirID = glGetUniformLocation(program, "light_dir");
+	light_posID = glGetUniformLocation(program, "light_pos");
 	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
+	emisiveID = glGetUniformLocation(program, "emissive");
+	global_ambientID = glGetUniformLocation(program, "global_ambient");
+}
+
+template <class type> void setUniforms(glm::mat4 view, type shape)
+{
+	glm::mat4 model_view = view * shape->transform->getModel();
+	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
+	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+
+	glUniform1f(ambientID, shape->light->getAmbient());
+	glUniform1f(shininessID, shape->light->getShininess());
+	glUniform3fv(specularID, 1, &shape->light->getSpecular()[0]);
+	glUniform3fv(diffuseID, 1, &shape->light->getDiffuse()[0]);
+	glUniform3fv(emisiveID, 1, &shape->light->getEmisive()[0]);
 }
 
 void display()
@@ -91,8 +115,7 @@ void display()
 
 	/* Make the compiled shader program current */
 	glUseProgram(program);
-
-	glUniform3fv(light_dirID, 1, &lightDirection[0]);
+	glUniform3fv(global_ambientID, 1, &global_ambient[0]);
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	projection = glm::perspective(30.0f, aspect_ratio, 0.1f, 100.0f);
@@ -103,29 +126,17 @@ void display()
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
+	glm::vec4 lightPosition_h = view * glm::vec4(theLight->transform->getCoords(), 1.0);
+	lightPosition = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
+	glUniform3fv(light_posID, 1, &lightPosition[0]);
 
-	glm::mat4 model_view = view * testCube->transform->getModel();
-	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
-	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
-	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+	setUniforms(view, theLight);
+	theLight->drawSphere();
 
-	glUniform1f(ambientID, testCube->light->getAmbient());
-	glUniform1f(shininessID, testCube->light->getShininess());
-	glUniform3fv(specularID, 1, &testCube->light->getSpecular()[0]);
-	glUniform3fv(diffuseID, 1, &testCube->light->getDiffuse()[0]);
-
+	setUniforms(view, testCube);
 	testCube->drawCuboid();
 
-	model_view = view * testSphere->transform->getModel();
-	normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
-	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
-	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
-
-	glUniform1f(ambientID, testSphere->light->getAmbient());
-	glUniform1f(shininessID, testSphere->light->getShininess());
-	glUniform3fv(specularID, 1, &testSphere->light->getSpecular()[0]);
-	glUniform3fv(diffuseID, 1, &testSphere->light->getDiffuse()[0]);
-
+	setUniforms(view, testSphere);
 	testSphere->drawSphere();
 
 	glDisableVertexAttribArray(0);
@@ -147,6 +158,13 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
+	if (key == '1') theLight->transform->translate(-0.05, 'x');
+	if (key == '2') theLight->transform->translate(0.05, 'x');
+	if (key == '3') theLight->transform->translate(-0.05, 'y');
+	if (key == '4') theLight->transform->translate(0.05, 'y');
+	if (key == '5') theLight->transform->translate(-0.05, 'z');
+	if (key == '6') theLight->transform->translate(0.05, 'z');
 }
 
 
