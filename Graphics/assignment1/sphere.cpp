@@ -139,7 +139,6 @@ void sphere::drawSphere()
 {
 	GLuint i;
 
-	/* Draw the vertices as GL_POINTS */
 	glBindBuffer(GL_ARRAY_BUFFER, this->sphereBufferObject);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);

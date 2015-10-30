@@ -1,23 +1,30 @@
-#pragma once
-#include "wrapper_glfw.h"
-#include <glm/glm.hpp>
-#include <iostream>
+#ifndef CYLINDER_H
+#define CYLINDER_H
+
+#include <glload/gl_4_0.h>
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glloadD.lib")
 #pragma comment(lib, "opengl32.lib")
+#include "transformation.h"
+#include "lighting.h"
+#include "math.h"
 
 class cylinder
 {
-
-	float radius, length;
+	GLfloat radius, length;
 	int definition;
-	GLuint cylinderBufferObject;
-	GLuint num_vertices;
+	GLuint cylinderBufferObject, cylinderNormals, cylinderColours, cylinderElementbuffer;
+	GLuint num_pvertices;
 
 public:
-	cylinder(float radius, float length, int definition);
+	transformation* transform;
+	lighting* light;
+
+	cylinder(GLfloat radius, GLfloat length, int definition, GLfloat ambient, GLfloat shininess);
 	~cylinder();
-	void defineVertices(GLfloat *pVertices);
+	void makeCylinderVBO();
+	void defineVertices(GLfloat *pVertices, GLfloat *pNormals);
 	void drawCyclinder();
 };
 
+#endif

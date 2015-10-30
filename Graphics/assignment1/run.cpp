@@ -8,8 +8,6 @@ also includes the OpenGL extension initialisation*/
 #include "wrapper_glfw.h"
 #include <iostream>
 /* Include GLM core and matrix extensions*/
-#include <glm/glm.hpp>
-#include "glm/gtc/matrix_transform.hpp"
 #include "cylinder.h"
 #include "cuboid.h"
 #include "sphere.h"
@@ -20,7 +18,7 @@ GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape cal
 GLfloat width, height;			/*window width & height*/
 GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID;
 glm::vec3 lightPosition, global_ambient;
-//cylinder* testCylinder;
+cylinder* testCylinder;
 cuboid* testCube;
 sphere* testSphere;
 sphere* theLight;
@@ -56,12 +54,15 @@ void init(wrapper_glfw *glw)
 	// Create the vertex array object and make it current
 	glBindVertexArray(vao);
 
-	//testCylinder = new cylinder(1.0, 1.0, 100);
-
 	theLight = new sphere(200, 200, 0.5, 10.0);
 	theLight->light->setDiffuse(1.0, 1.0, 1.0);
 	theLight->light->emitLight(true);
 	theLight->transform->scaleUniform(-0.9);
+
+	testCylinder = new cylinder(0.5, 0.5, 100, 0.5, 40.0);
+	testCylinder->light->setDiffuse(1.0, 0.0, 0.0);
+	testCylinder->transform->spin(0.5, 'x');
+	testCylinder->light->emitLight(true);
 
 	testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
 	testCube->light->setDiffuse(1.0, 0.0, 0.0);
@@ -133,11 +134,14 @@ void display()
 	setUniforms(view, theLight);
 	theLight->drawSphere();
 
+	setUniforms(view, testCylinder);
+	testCylinder->drawCyclinder();
+
 	setUniforms(view, testCube);
 	testCube->drawCuboid();
 
-	setUniforms(view, testSphere);
-	testSphere->drawSphere();
+	//setUniforms(view, testSphere);
+	//testSphere->drawSphere();
 
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);

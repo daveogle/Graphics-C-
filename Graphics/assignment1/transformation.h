@@ -1,6 +1,5 @@
 #pragma once
 #include <glload/_int_gl_type.h>
-#include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 
 class transformation
