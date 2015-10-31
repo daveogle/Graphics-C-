@@ -43,25 +43,26 @@ void cylinder::makeCylinderVBO()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	//number of indices is 3 points for each point around the edge (one triangle for each point)
-	GLuint numindices = (this->definition * 3);
+	GLuint numindices = (this->definition +1);
 	GLuint* pindices = new GLuint[numindices];
 
 	// fill "indices" to define triangle strips
 	GLuint index = 0;		// Current index
 	// Define indices for each triangle 
-	for (int i = 0; i < this->definition; i++)
+	for (int i = 0; i < this->definition + 1; i++)
 	{
-		//first point always center of circle
-		int first = 0;
-		//second point
-		int second = i+1;
-		//third point
-		int third = i + 2;
+		pindices[i] = i;
+		////first point always center of circle
+		//int first = 0;
+		////second point
+		//int second = i+1;
+		////third point
+		//int third = i + 2;
 
-		pindices[index * 3] = first;
-		pindices[index * 3 + 1] = second;
-		pindices[index * 3 + 2] = third;
-		index++;
+		//pindices[index * 3] = first;
+		//pindices[index * 3 + 1] = second;
+		//pindices[index * 3 + 2] = third;
+		//index++;
 	}
 
 	glGenBuffers(1, &this->cylinderElementbuffer);

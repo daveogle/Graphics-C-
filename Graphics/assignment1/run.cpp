@@ -11,23 +11,31 @@ also includes the OpenGL extension initialisation*/
 #include "cylinder.h"
 #include "cuboid.h"
 #include "sphere.h"
+#include "track.h"
 
 glm::mat4 projection;
 GLuint program, vao;			/*shader & vertex array object*/
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
+GLfloat view_x, view_y, view_z;
 GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID;
 glm::vec3 lightPosition, global_ambient;
-cylinder* testCylinder;
-cuboid* testCube;
-sphere* testSphere;
+//cylinder* testCylinder;
+//cuboid* testCube;
+
+//sphere* testSphere;
+track* trackOne;
 sphere* theLight;
+
 
 void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
 	lightPosition = glm::vec3(100.0, 0.0, 50.0);
 	global_ambient = glm::vec3(0.05);
+	view_x = 0;
+	view_y = 0;
+	view_z = 5;
 
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -59,22 +67,24 @@ void init(wrapper_glfw *glw)
 	theLight->light->emitLight(true);
 	theLight->transform->scaleUniform(-0.9);
 
-	testCylinder = new cylinder(0.5, 0.5, 100, 0.5, 40.0);
-	testCylinder->light->setDiffuse(1.0, 0.0, 0.0);
-	testCylinder->transform->spin(0.5, 'x');
-	testCylinder->light->emitLight(true);
+	trackOne = new track();
 
-	testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
-	testCube->light->setDiffuse(1.0, 0.0, 0.0);
-	testCube->transform->translate(1.0, 'x');
-	testCube->transform->spin(0.5, 'z');
-	testCube->transform->spin(0.5, 'y');
+	//testCylinder = new cylinder(0.5, 0.5, 100, 0.5, 40.0);
+	//testCylinder->light->setDiffuse(1.0, 0.0, 0.0);
+	//testCylinder->transform->spin(0.5, 'x');
+	//testCylinder->light->emitLight(true);
 
-	testSphere = new sphere(200, 200, 0.05, 20.0);
-	testSphere->light->setDiffuse(0.0, 1.0, 0.0);
-	testSphere->transform->translate(-1.0, 'x');
-	testSphere->transform->scaleUniform(-0.7);
-	testSphere->transform->spin(-0.5, 'y');
+	//testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
+	//testCube->light->setDiffuse(1.0, 0.0, 0.0);
+	//testCube->transform->translate(1.0, 'x');
+	//testCube->transform->spin(0.5, 'z');
+	//testCube->transform->spin(0.5, 'y');
+
+	//testSphere = new sphere(200, 200, 0.05, 20.0);
+	//testSphere->light->setDiffuse(0.0, 1.0, 0.0);
+	//testSphere->transform->translate(-1.0, 'x');
+	//testSphere->transform->scaleUniform(-0.7);
+	//testSphere->transform->spin(-0.5, 'y');
 
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
@@ -123,7 +133,7 @@ void display()
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(0, 0, 4), // Camera is at (0,0,4), in World Space
+		glm::vec3(view_x, view_y, view_z), // Camera is at (0,0,4), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
@@ -134,12 +144,16 @@ void display()
 	setUniforms(view, theLight);
 	theLight->drawSphere();
 
-	setUniforms(view, testCylinder);
-	testCylinder->drawCyclinder();
+	//setUniforms(view, testCylinder);
+	//testCylinder->drawCyclinder();
 
-	setUniforms(view, testCube);
-	testCube->drawCuboid();
+	for (int i = 0; i < trackOne->getTracks().size(); i++)
+	{
+		setUniforms(view, trackOne->getTracks()[i]);
+		trackOne->getTracks()[i]->drawCuboid();
+	}
 
+	trackOne->moveForward(0.001);
 	//setUniforms(view, testSphere);
 	//testSphere->drawSphere();
 
@@ -169,6 +183,13 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == '4') theLight->transform->translate(0.05, 'y');
 	if (key == '5') theLight->transform->translate(-0.05, 'z');
 	if (key == '6') theLight->transform->translate(0.05, 'z');
+
+	if (key == GLFW_KEY_UP) view_y += 0.1;
+	if (key == GLFW_KEY_DOWN) view_y -= 0.1;
+	if (key == GLFW_KEY_LEFT) view_x -= 0.1;
+	if (key == GLFW_KEY_RIGHT) view_x += 0.1;
+	if (key == GLFW_KEY_KP_ADD) view_z -= 0.1;
+	if (key == GLFW_KEY_KP_SUBTRACT) view_z += 0.1;
 }
 
 

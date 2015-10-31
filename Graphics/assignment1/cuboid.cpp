@@ -174,6 +174,5 @@ void cuboid::drawCuboid()
 	glBindBuffer(GL_ARRAY_BUFFER, normalsBufferObject);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }

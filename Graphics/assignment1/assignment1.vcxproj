@@ -75,6 +75,7 @@
     <ClInclude Include="cylinder.h" />
     <ClInclude Include="lighting.h" />
     <ClInclude Include="sphere.h" />
+    <ClInclude Include="track.h" />
     <ClInclude Include="transformation.h" />
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
@@ -84,6 +85,7 @@
     <ClCompile Include="lighting.cpp" />
     <ClCompile Include="run.cpp" />
     <ClCompile Include="sphere.cpp" />
+    <ClCompile Include="track.cpp" />
     <ClCompile Include="transformation.cpp" />
     <ClCompile Include="wrapper_glfw.cpp" />
   </ItemGroup>
