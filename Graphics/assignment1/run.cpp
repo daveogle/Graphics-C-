@@ -15,6 +15,7 @@ also includes the OpenGL extension initialisation*/
 
 glm::mat4 projection;
 GLuint program, vao;			/*shader & vertex array object*/
+GLfloat speed;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
 GLfloat view_x, view_y, view_z;
@@ -36,6 +37,7 @@ void init(wrapper_glfw *glw)
 	view_x = 0;
 	view_y = 0;
 	view_z = 5;
+	speed = 0.005;
 
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -153,7 +155,7 @@ void display()
 		trackOne->getTracks()[i]->drawCuboid();
 	}
 
-	trackOne->moveForward(0.001);
+	trackOne->moveForward(speed);
 	//setUniforms(view, testSphere);
 	//testSphere->drawSphere();
 
@@ -190,6 +192,9 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == GLFW_KEY_RIGHT) view_x += 0.1;
 	if (key == GLFW_KEY_KP_ADD) view_z -= 0.1;
 	if (key == GLFW_KEY_KP_SUBTRACT) view_z += 0.1;
+
+	if (key == ',') speed -= 0.005;
+	if (key == '.') speed += 0.005;
 }
 
 

@@ -4,6 +4,11 @@
 
 class track
 {
+	int numberOfTracks;
+	float startX;
+	float actualX;
+	float endX;
+	float radius;
 	std::vector<cuboid*> tracks;
 
 public:

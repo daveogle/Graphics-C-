@@ -4,6 +4,11 @@
 
 track::track()
 {
+	this->numberOfTracks = 36;
+	this->radius = 0.2;
+	this->endX = PI * this->radius;
+	this->startX = -this->endX;
+	this->actualX = startX;
 	setPositions();
 }
 
@@ -12,76 +17,57 @@ track::~track()
 {
 }
 
-//float offset = -1.5;
-//for (int i = 0; i < tracks.size(); i++)
-//{
-//	tracks[i]->light->setDiffuse(1.0, 0.0, 0.0);
-//	tracks[i]->transform->spin(0.2, 'x');
-//	tracks[i]->transform->translate(offset, 'x');
-//	offset = offset + 0.3;
-//}
-
 void track::setPositions()
 {
-	unsigned int numberOfTracks = 22;
-	std::vector<cuboid*> tracks(numberOfTracks);
+	std::vector<cuboid*> tracks(this->numberOfTracks);
+	float n = this->numberOfTracks / 6;
+	float spacing = (PI * radius) / n;
+	float track_width = spacing * 0.9;
 
-	float startX = -0.75;
-	float actualX = startX;
-	float endX = 0.75;
-	float radius = 0.2;
-	float rotate_amount [6] = {0.0, 30.0, 40.0, 40.0, 40.0, 30.0};
-	float current_rotate = 0;
-
-	for (int i = 0; i < numberOfTracks; i++)
+	for (int i = 0; i < this->numberOfTracks; i++)
 	{
-		cuboid* track = new cuboid(0.02, 0.2, 0.3, 0.5, 40.0);
+		cuboid* track = new cuboid(0.02, track_width, 0.3, 0.5, 40.0);
 		track->light->setDiffuse(1.0, 0.0, 0.0);
 
-		if (i < 6)
+		if (i < n + 1)
 		{
-			current_rotate = current_rotate - rotate_amount[i];
-			float theta = ((float)i) * PI / 5;
-			float cornerX = radius * sin(theta);
-			track->transform->translate((startX - cornerX), 'x');
-			track->transform->rotate(current_rotate, 'z');
-
+			float theta = ((float)i) * PI / n;
+			float rotate_value = (180 / PI) * theta;
+			float changeX = this->radius * sin(theta);
+			track->transform->translate(this->startX - changeX, 'x');
+			track->transform->rotate(-rotate_value, 'z');
 			float cornerY = radius * cos(theta);
 			track->transform->translate(cornerY, 'y');
-
 			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << startX - cornerX << ", y:" << cornerY << std::endl;
 		}
-		if (i >= 6  && i < 11)
+
+		if (i >= n+1  && i < n*3)
 		{
-			actualX = actualX + 0.25;
+			actualX = actualX + spacing;
 			track->transform->translate(actualX, 'x');
 			track->transform->translate(-radius, 'y');
 			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << actualX << ", y:" << -radius << std::endl;
 		}
 
-		if (i >= 11 && i < 17)
+		if (i >= n*3 && i < n*4+1)
 		{
-			current_rotate = current_rotate - rotate_amount[i - 11];
-			float theta = ((float)(i - 11)) * PI / 5;
+			float theta = (float)(i - (n*3)) * PI / n;
 			float cornerX = radius * sin(PI - theta);
 			track->transform->translate((endX + cornerX), 'x');
-			track->transform->rotate(current_rotate, 'z');
+			float rotate_value = (180 / PI) * theta;
+			track->transform->rotate(-rotate_value, 'z');
 			float cornerY = radius * cos(PI - theta);
 			track->transform->translate(cornerY, 'y');
 			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << endX + cornerX << ", y:" << cornerY << std::endl;
-			if (i == 16)
+			if (i == n*4)
 				actualX = endX + cornerX;
 		}
-		if (i >= 17)
+		if (i >= n*4 + 1)
 		{
-			actualX = actualX - 0.25;
+			actualX = actualX - spacing;
 			track->transform->translate(actualX, 'x');
 			track->transform->translate(radius, 'y');
 			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << actualX << ", y:" << radius << std::endl;
 		}
 	}
 	this->tracks = tracks;
@@ -89,62 +75,53 @@ void track::setPositions()
 
 void track::moveForward(GLfloat increment)
 {
-	unsigned int numberOfTracks = 22;
-
-	float startX = -0.75;
-	float steps = 180 / increment;
-	float actualX = startX;
-	float endX = 0.75;
-	float radius = 0.2;
-	float rotate_amount[6] = { 0.0, 30.0, 40.0, 40.0, 40.0, 30.0 };
-	float current_rotate = 0;
-
-	for (int i = 0; i < numberOfTracks; i++)
+	for (int i = 0; i < this->numberOfTracks; i++)
 	{
 		glm::vec3 coords = this->tracks[i]->transform->getCoords();
 
-		if (coords.x <= startX && coords.y != -radius)
+		if (coords.x <= startX)
 		{
-			//current_rotate = current_rotate - rotate_amount[i];
-			float theta = (float)PI / steps;
-			float cornerX = radius * sin(theta);
-			this->tracks[i]->transform->translate((startX - cornerX), 'x');
-			//this->tracks[i]->transform->rotate(current_rotate, 'z');
+			float old_theta = acos(coords.y / this->radius);
+			float new_theta = increment / this->radius;
+			float current_rotate = (180 / PI) * new_theta;
+			new_theta = new_theta + old_theta;
+			float oldX = coords.x;
+			float newX = radius* sin(new_theta);
+			float change_x = -((oldX - startX) + newX);
+			this->tracks[i]->transform->translate((change_x), 'x');
+			this->tracks[i]->transform->rotate(-current_rotate, 'z');
 
-			float cornerY = radius * cos(theta);
-			this->tracks[i]->transform->translate(cornerY, 'y');
-			//std::cout << "track" << i + 1 << " = x:" << startX - cornerX << ", y:" << cornerY << std::endl;
+			float newY = this->radius * cos(new_theta);
+			float changeY = -(coords.y - newY);
+			this->tracks[i]->transform->translate(changeY, 'y');
 		}
-		if (coords.x > startX && coords.y == -radius && coords.x < endX)
+
+		else if (coords.y < 0 && coords.x >= startX && coords.x < endX)
 		{
 			this->tracks[i]->transform->translate(increment, 'x');
-			//std::cout << "track" << i + 1 << " = x:" << actualX << ", y:" << -radius << std::endl;
 		}
-		/*
-		if (i >= 11 && i < 17)
+
+		else if (coords.x >= endX)
 		{
-			current_rotate = current_rotate - rotate_amount[i - 11];
-			float theta = ((float)(i - 11)) * PI / 5;
-			float cornerX = radius * sin(PI - theta);
-			track->transform->translate((endX + cornerX), 'x');
-			track->transform->rotate(current_rotate, 'z');
-			float cornerY = radius * cos(PI - theta);
-			track->transform->translate(cornerY, 'y');
-			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << endX + cornerX << ", y:" << cornerY << std::endl;
-			if (i == 16)
-				actualX = endX + cornerX;
+			float old_theta = acos(coords.y / this->radius);
+			float new_theta = increment / this->radius;
+			float current_rotate = (180 / PI) * new_theta;
+			new_theta = old_theta - new_theta;
+			float oldX = coords.x;
+			float newX = radius * sin(new_theta);
+			float change_x = -oldX + endX + newX;
+			this->tracks[i]->transform->translate(change_x, 'x');
+			this->tracks[i]->transform->rotate(-current_rotate, 'z');
+
+			float newY = this->radius * cos(new_theta);
+			float changeY = -(coords.y - newY);
+			this->tracks[i]->transform->translate(changeY, 'y');
 		}
-		if (i >= 17)
+		else// if (coords.y > 0 && coords.x <= endX && coords.x > startX)
 		{
-			actualX = actualX - 0.25;
-			track->transform->translate(actualX, 'x');
-			track->transform->translate(radius, 'y');
-			tracks[i] = track;
-			std::cout << "track" << i + 1 << " = x:" << actualX << ", y:" << radius << std::endl;
-		}*/
+			this->tracks[i]->transform->translate(-increment, 'x');
+		}
 	}
-	this->tracks = tracks;
 }
 
 std::vector<cuboid*> track::getTracks()
