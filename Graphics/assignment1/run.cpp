@@ -23,6 +23,7 @@ GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specu
 glm::vec3 lightPosition, global_ambient;
 
 track* trackOne;
+track* trackTwo;
 sphere* theLight;
 
 
@@ -67,6 +68,9 @@ void init(wrapper_glfw *glw)
 	theLight->transform->scaleUniform(-0.9);
 
 	trackOne = new track();
+	trackTwo = new track();
+	trackOne->getCube()->transform->translate(-1.0, 'z');
+	trackTwo->getCube()->transform->translate(1.0, 'z');
 
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
@@ -81,23 +85,23 @@ void init(wrapper_glfw *glw)
 	global_ambientID = glGetUniformLocation(program, "global_ambient");
 }
 
-template <class type> void setUniforms(glm::mat4 view, type shape)
-{
-	glm::mat4 model_view = view * shape->transform->getModel();
-	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
-	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
-	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+//template <class type> void setUniforms(glm::mat4 view, glm::mat4 model, type shape)
+//{
+//	glm::mat4 model_view = view * model;
+//	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+//	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
+//	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+//
+//	glUniform1f(ambientID, shape->light->getAmbient());
+//	glUniform1f(shininessID, shape->light->getShininess());
+//	glUniform3fv(specularID, 1, &shape->light->getSpecular()[0]);
+//	glUniform3fv(diffuseID, 1, &shape->light->getDiffuse()[0]);
+//	glUniform3fv(emisiveID, 1, &shape->light->getEmisive()[0]);
+//}
 
-	glUniform1f(ambientID, shape->light->getAmbient());
-	glUniform1f(shininessID, shape->light->getShininess());
-	glUniform3fv(specularID, 1, &shape->light->getSpecular()[0]);
-	glUniform3fv(diffuseID, 1, &shape->light->getDiffuse()[0]);
-	glUniform3fv(emisiveID, 1, &shape->light->getEmisive()[0]);
-}
-
-void setUniforms(glm::mat4 view, transformation* transform, lighting* light)
+void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
 {
-	glm::mat4 model_view = view * transform->getModel();
+	glm::mat4 model_view = view * model;
 	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
 	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
 	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
@@ -137,17 +141,22 @@ void display()
 	lightPosition = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
 	glUniform3fv(light_posID, 1, &lightPosition[0]);
 
-	setUniforms(view, theLight);
+	setUniforms(view, theLight->transform->getModel(), theLight->light);
 	theLight->drawSphere();
 
-	for (int i = 0; i < trackOne->getTracks().size(); i++)
+	track* tracks[2] = { trackOne, trackTwo };
+
+	for (int j = 0; j < 2; j++)
 	{
-		setUniforms(view, trackOne->getTracks()[i], trackOne->getCube()->light);
-		trackOne->getCube()->drawCuboid();
+		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
+		{
+			setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getCube()->transform->getModel()), tracks[j]->getCube()->light);
+			tracks[j]->getCube()->drawCuboid();
+		}
 	}
 
 	trackOne->moveForward(speed);
-
+	trackTwo->moveForward(-speed);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }

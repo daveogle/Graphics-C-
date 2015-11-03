@@ -82,6 +82,7 @@ void track::moveForward(int speed)
 		increment = increment * -1;
 		speed = speed * -1;
 	}
+	std::cout << speed << std::endl;
 	for (int i = 0; i < this->numberOfTracks; i++)
 	{
 		for (int j = 0; j < speed; j++)
