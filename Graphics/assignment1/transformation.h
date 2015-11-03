@@ -1,6 +1,7 @@
 #pragma once
 #include <glload/_int_gl_type.h>
 #include "glm/gtc/matrix_transform.hpp"
+#include <stack>
 
 class transformation
 {
@@ -16,6 +17,7 @@ class transformation
 	GLfloat x_tanslate;
 	GLfloat y_tanslate;
 	GLfloat z_tanslate;
+	//std::stack<glm::m> transformation_stack;
 
 public:
 	transformation();

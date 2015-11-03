@@ -9,14 +9,17 @@ class track
 	float actualX;
 	float endX;
 	float radius;
-	std::vector<cuboid*> tracks;
-
+	std::vector<transformation*> track_transformation;
+	cuboid* cube;
+	int n;
+	float spacing;
+	float track_width;
 public:
 	track();
 	~track();
 	void setPositions();
 	void moveForward(GLfloat increment);
-	void moveBack();
-	std::vector<cuboid*> getTracks();
+	std::vector<transformation*> getTracks();
+	cuboid* getCube();
 };
 

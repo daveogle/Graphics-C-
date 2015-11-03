@@ -21,10 +21,7 @@ GLfloat width, height;			/*window width & height*/
 GLfloat view_x, view_y, view_z;
 GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID;
 glm::vec3 lightPosition, global_ambient;
-//cylinder* testCylinder;
-//cuboid* testCube;
 
-//sphere* testSphere;
 track* trackOne;
 sphere* theLight;
 
@@ -71,23 +68,6 @@ void init(wrapper_glfw *glw)
 
 	trackOne = new track();
 
-	//testCylinder = new cylinder(0.5, 0.5, 100, 0.5, 40.0);
-	//testCylinder->light->setDiffuse(1.0, 0.0, 0.0);
-	//testCylinder->transform->spin(0.5, 'x');
-	//testCylinder->light->emitLight(true);
-
-	//testCube = new cuboid(0.5, 0.5, 0.5, 0.05, 40.0);
-	//testCube->light->setDiffuse(1.0, 0.0, 0.0);
-	//testCube->transform->translate(1.0, 'x');
-	//testCube->transform->spin(0.5, 'z');
-	//testCube->transform->spin(0.5, 'y');
-
-	//testSphere = new sphere(200, 200, 0.05, 20.0);
-	//testSphere->light->setDiffuse(0.0, 1.0, 0.0);
-	//testSphere->transform->translate(-1.0, 'x');
-	//testSphere->transform->scaleUniform(-0.7);
-	//testSphere->transform->spin(-0.5, 'y');
-
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
 	modelViewID = glGetUniformLocation(program, "model_view");
@@ -113,6 +93,20 @@ template <class type> void setUniforms(glm::mat4 view, type shape)
 	glUniform3fv(specularID, 1, &shape->light->getSpecular()[0]);
 	glUniform3fv(diffuseID, 1, &shape->light->getDiffuse()[0]);
 	glUniform3fv(emisiveID, 1, &shape->light->getEmisive()[0]);
+}
+
+void setUniforms(glm::mat4 view, transformation* transform, lighting* light)
+{
+	glm::mat4 model_view = view * transform->getModel();
+	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
+	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+
+	glUniform1f(ambientID, light->getAmbient());
+	glUniform1f(shininessID, light->getShininess());
+	glUniform3fv(specularID, 1, &light->getSpecular()[0]);
+	glUniform3fv(diffuseID, 1, &light->getDiffuse()[0]);
+	glUniform3fv(emisiveID, 1, &light->getEmisive()[0]);
 }
 
 void display()
@@ -146,18 +140,13 @@ void display()
 	setUniforms(view, theLight);
 	theLight->drawSphere();
 
-	//setUniforms(view, testCylinder);
-	//testCylinder->drawCyclinder();
-
 	for (int i = 0; i < trackOne->getTracks().size(); i++)
 	{
-		setUniforms(view, trackOne->getTracks()[i]);
-		trackOne->getTracks()[i]->drawCuboid();
+		setUniforms(view, trackOne->getTracks()[i], trackOne->getCube()->light);
+		trackOne->getCube()->drawCuboid();
 	}
 
-	trackOne->moveForward(speed);
-	//setUniforms(view, testSphere);
-	//testSphere->drawSphere();
+	//trackOne->moveForward(speed);
 
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
