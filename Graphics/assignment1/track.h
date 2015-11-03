@@ -18,7 +18,7 @@ public:
 	track();
 	~track();
 	void setPositions();
-	void moveForward(GLfloat increment);
+	void moveForward(int speed);
 	std::vector<transformation*> getTracks();
 	cuboid* getCube();
 };

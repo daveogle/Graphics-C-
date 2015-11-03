@@ -74,53 +74,62 @@ void track::setPositions()
 	this->track_transformation = track_transformation;
 }
 
-void track::moveForward(GLfloat increment)
+void track::moveForward(int speed)
 {
+	GLfloat increment = 0.001;
+	if (speed < 0)
+	{
+		increment = increment * -1;
+		speed = speed * -1;
+	}
 	for (int i = 0; i < this->numberOfTracks; i++)
 	{
-		glm::vec3 coords = this->track_transformation[i]->getCoords();
-
-		if (coords.x <= startX)
+		for (int j = 0; j < speed; j++)
 		{
-			float old_theta = acos(coords.y / this->radius);
-			float new_theta = increment / this->radius;
-			float current_rotate = (180 / PI) * new_theta;
-			new_theta = new_theta + old_theta;
-			float oldX = coords.x;
-			float newX = radius* sin(new_theta);
-			float change_x = -((oldX - startX) + newX);
-			this->track_transformation[i]->translate((change_x), 'x');
-			this->track_transformation[i]->rotate(-current_rotate, 'z');
+			glm::vec3 coords = this->track_transformation[i]->getCoords();
 
-			float newY = this->radius * cos(new_theta);
-			float changeY = -(coords.y - newY);
-			this->track_transformation[i]->translate(changeY, 'y');
-		}
+			if (coords.x <= startX)
+			{
+				float old_theta = acos(coords.y / this->radius);
+				float new_theta = increment / this->radius;
+				float current_rotate = (180 / PI) * new_theta;
+				new_theta = new_theta + old_theta;
+				float oldX = coords.x;
+				float newX = radius* sin(new_theta);
+				float change_x = -((oldX - startX) + newX);
+				this->track_transformation[i]->translate((change_x), 'x');
+				this->track_transformation[i]->rotate(-current_rotate, 'z');
 
-		else if (coords.y < 0 && coords.x >= startX && coords.x < endX)
-		{
-			this->track_transformation[i]->translate(increment, 'x');
-		}
+				float newY = this->radius * cos(new_theta);
+				float changeY = -(coords.y - newY);
+				this->track_transformation[i]->translate(changeY, 'y');
+			}
 
-		else if (coords.x >= endX)
-		{
-			float old_theta = acos(coords.y / this->radius);
-			float new_theta = increment / this->radius;
-			float current_rotate = (180 / PI) * new_theta;
-			new_theta = old_theta - new_theta;
-			float oldX = coords.x;
-			float newX = radius * sin(new_theta);
-			float change_x = -oldX + endX + newX;
-			this->track_transformation[i]->translate(change_x, 'x');
-			this->track_transformation[i]->rotate(-current_rotate, 'z');
+			else if (coords.y < 0 && coords.x >= startX && coords.x < endX)
+			{
+				this->track_transformation[i]->translate(increment, 'x');
+			}
 
-			float newY = this->radius * cos(new_theta);
-			float changeY = -(coords.y - newY);
-			this->track_transformation[i]->translate(changeY, 'y');
-		}
-		else
-		{
-			this->track_transformation[i]->translate(-increment, 'x');
+			else if (coords.x >= endX)
+			{
+				float old_theta = acos(coords.y / this->radius);
+				float new_theta = increment / this->radius;
+				float current_rotate = (180 / PI) * new_theta;
+				new_theta = old_theta - new_theta;
+				float oldX = coords.x;
+				float newX = radius * sin(new_theta);
+				float change_x = -oldX + endX + newX;
+				this->track_transformation[i]->translate(change_x, 'x');
+				this->track_transformation[i]->rotate(-current_rotate, 'z');
+
+				float newY = this->radius * cos(new_theta);
+				float changeY = -(coords.y - newY);
+				this->track_transformation[i]->translate(changeY, 'y');
+			}
+			else
+			{
+				this->track_transformation[i]->translate(-increment, 'x');
+			}
 		}
 	}
 }

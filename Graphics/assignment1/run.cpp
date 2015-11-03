@@ -34,7 +34,7 @@ void init(wrapper_glfw *glw)
 	view_x = 0;
 	view_y = 0;
 	view_z = 5;
-	speed = 0.005;
+	speed = 1;
 
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -146,7 +146,7 @@ void display()
 		trackOne->getCube()->drawCuboid();
 	}
 
-	//trackOne->moveForward(speed);
+	trackOne->moveForward(speed);
 
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
@@ -182,8 +182,8 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == GLFW_KEY_KP_ADD) view_z -= 0.1;
 	if (key == GLFW_KEY_KP_SUBTRACT) view_z += 0.1;
 
-	if (key == ',') speed -= 0.005;
-	if (key == '.') speed += 0.005;
+	if (key == ',') speed -= 1;
+	if (key == '.') speed += 1;
 }
 
 
