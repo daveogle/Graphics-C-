@@ -69,8 +69,8 @@ void init(wrapper_glfw *glw)
 
 	trackOne = new track();
 	trackTwo = new track();
-	trackOne->getCube()->transform->translate(-1.0, 'z');
-	trackTwo->getCube()->transform->translate(1.0, 'z');
+	trackOne->getTrack()->transform->translate(-1.0, 'z');
+	trackTwo->getTrack()->transform->translate(1.0, 'z');
 
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
@@ -150,8 +150,8 @@ void display()
 	{
 		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
 		{
-			setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getCube()->transform->getModel()), tracks[j]->getCube()->light);
-			tracks[j]->getCube()->drawCuboid();
+			setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getTrack()->transform->getModel()), tracks[j]->getTrack()->light);
+			tracks[j]->getTrack()->drawTrack();
 		}
 	}
 

@@ -9,7 +9,7 @@ track::track()
 	this->n = this->numberOfTracks / 6;
 	this->spacing = (PI * radius) / this->n;
 	this->track_width = spacing * 0.9;
-	this->cube = new cuboid(0.02, track_width, 0.3, 0.5, 40.0);
+	this->base_track = new tank_track(0.02, track_width, 0.3, 0.5, 40.0);
 	this->endX = PI * this->radius;
 	this->startX = -this->endX;
 	this->actualX = startX;
@@ -24,16 +24,16 @@ track::~track()
 void track::setPositions()
 {
 	std::vector<transformation*> track_transformation(this->numberOfTracks);
-
+	float rotate_value = 0;
 	for (int i = 0; i < this->numberOfTracks; i++)
 	{
 		transformation* track = new transformation();
-		this->cube->light->setDiffuse(1.0, 0.0, 0.0);
+		this->base_track->light->setDiffuse(1.0, 0.0, 0.0);
 
 		if (i < n + 1)
 		{
 			float theta = ((float)i) * PI / n;
-			float rotate_value = (180 / PI) * theta;
+			rotate_value = (180 / PI) * theta;
 			float changeX = this->radius * sin(theta);
 			track->translate(this->startX - changeX, 'x');
 			track->rotate(-rotate_value, 'z');
@@ -47,6 +47,7 @@ void track::setPositions()
 			actualX = actualX + spacing;
 			track->translate(actualX, 'x');
 			track->translate(-radius, 'y');
+			track->rotate(-rotate_value, 'z');
 			track_transformation[i] = track;
 		}
 
@@ -55,7 +56,7 @@ void track::setPositions()
 			float theta = (float)(i - (n*3)) * PI / n;
 			float cornerX = radius * sin(PI - theta);
 			track->translate((endX + cornerX), 'x');
-			float rotate_value = (180 / PI) * theta;
+			rotate_value = 180 + (180 / PI) * theta;
 			track->rotate(-rotate_value, 'z');
 			float cornerY = radius * cos(PI - theta);
 			track->translate(cornerY, 'y');
@@ -68,6 +69,7 @@ void track::setPositions()
 			actualX = actualX - spacing;
 			track->translate(actualX, 'x');
 			track->translate(radius, 'y');
+			track->rotate(-rotate_value, 'z');
 			track_transformation[i] = track;
 		}
 	}
@@ -140,7 +142,7 @@ std::vector<transformation*> track::getTracks()
 	return this->track_transformation;
 }
 
-cuboid* track::getCube()
+tank_track* track::getTrack()
 {
-	return this->cube;
+	return this->base_track;
 }

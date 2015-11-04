@@ -42,6 +42,9 @@
     <ClInclude Include="track.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tank_track.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="wrapper_glfw.cpp">
@@ -66,6 +69,9 @@
       <Filter>Source Files\Shapes</Filter>
     </ClCompile>
     <ClCompile Include="track.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tank_track.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "cuboid.h"
+#include "tank_track.h"
 
 class track
 {
@@ -10,7 +11,7 @@ class track
 	float endX;
 	float radius;
 	std::vector<transformation*> track_transformation;
-	cuboid* cube;
+	tank_track* base_track;
 	int n;
 	float spacing;
 	float track_width;
@@ -20,6 +21,6 @@ public:
 	void setPositions();
 	void moveForward(int speed);
 	std::vector<transformation*> getTracks();
-	cuboid* getCube();
+	tank_track* getTrack();
 };
 
