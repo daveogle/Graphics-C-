@@ -12,6 +12,7 @@ also includes the OpenGL extension initialisation*/
 #include "cuboid.h"
 #include "sphere.h"
 #include "track.h"
+#include "body.h"
 
 glm::mat4 projection;
 GLuint program, vao;			/*shader & vertex array object*/
@@ -25,6 +26,8 @@ glm::vec3 lightPosition, global_ambient;
 track* trackOne;
 track* trackTwo;
 sphere* theLight;
+body* tankBody;
+//cuboid* testCube;
 
 
 void init(wrapper_glfw *glw)
@@ -67,6 +70,14 @@ void init(wrapper_glfw *glw)
 	theLight->light->emitLight(true);
 	theLight->transform->scaleUniform(-0.9);
 
+	tankBody = new body(40.0, 0.02);
+	tankBody->light->setDiffuse(1.0, 0.0, 0.0);
+	tankBody->transform->rotate(180.0, 'y');
+
+	//testCube = new cuboid(1.0, 1.0, 1.0, 0.2, 50.0);
+	//testCube->light->setDiffuse(1.0, 0.0, 0.0);
+	//testCube->transform->spin(1.0, 'x');
+
 	trackOne = new track();
 	trackTwo = new track();
 	trackOne->getTrack()->transform->translate(-1.0, 'z');
@@ -84,20 +95,6 @@ void init(wrapper_glfw *glw)
 	emisiveID = glGetUniformLocation(program, "emissive");
 	global_ambientID = glGetUniformLocation(program, "global_ambient");
 }
-
-//template <class type> void setUniforms(glm::mat4 view, glm::mat4 model, type shape)
-//{
-//	glm::mat4 model_view = view * model;
-//	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
-//	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
-//	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
-//
-//	glUniform1f(ambientID, shape->light->getAmbient());
-//	glUniform1f(shininessID, shape->light->getShininess());
-//	glUniform3fv(specularID, 1, &shape->light->getSpecular()[0]);
-//	glUniform3fv(diffuseID, 1, &shape->light->getDiffuse()[0]);
-//	glUniform3fv(emisiveID, 1, &shape->light->getEmisive()[0]);
-//}
 
 void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
 {
@@ -144,7 +141,13 @@ void display()
 	setUniforms(view, theLight->transform->getModel(), theLight->light);
 	theLight->drawSphere();
 
+	//setUniforms(view, testCube->transform->getModel(), testCube->light);
+	//testCube->drawCuboid();
+
 	track* tracks[2] = { trackOne, trackTwo };
+
+	setUniforms(view, tankBody->transform->getModel(), tankBody->light);
+	tankBody->drawBody();
 
 	for (int j = 0; j < 2; j++)
 	{

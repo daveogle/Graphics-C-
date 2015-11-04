@@ -33,7 +33,7 @@ void track::setPositions()
 		if (i < n + 1)
 		{
 			float theta = ((float)i) * PI / n;
-			rotate_value = (180 / PI) * theta;
+			rotate_value = 180 + (180 / PI) * theta;
 			float changeX = this->radius * sin(theta);
 			track->translate(this->startX - changeX, 'x');
 			track->rotate(-rotate_value, 'z');
@@ -56,7 +56,7 @@ void track::setPositions()
 			float theta = (float)(i - (n*3)) * PI / n;
 			float cornerX = radius * sin(PI - theta);
 			track->translate((endX + cornerX), 'x');
-			rotate_value = 180 + (180 / PI) * theta;
+			rotate_value = (180 / PI) * theta;
 			track->rotate(-rotate_value, 'z');
 			float cornerY = radius * cos(PI - theta);
 			track->translate(cornerY, 'y');

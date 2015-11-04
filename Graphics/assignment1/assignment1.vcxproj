@@ -71,6 +71,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="body.h" />
     <ClInclude Include="cuboid.h" />
     <ClInclude Include="cylinder.h" />
     <ClInclude Include="lighting.h" />
@@ -81,6 +82,7 @@
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="body.cpp" />
     <ClCompile Include="cuboid.cpp" />
     <ClCompile Include="cylinder.cpp" />
     <ClCompile Include="lighting.cpp" />
