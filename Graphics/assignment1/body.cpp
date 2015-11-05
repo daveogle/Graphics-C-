@@ -3,6 +3,7 @@
 
 body::body(GLfloat shininess, GLfloat ambient)
 {
+	this-> colour = glm::vec3(0.33, 0.368, 0.192);
 	this->numberOfVerticies = 40;
 	this->light = new lighting(shininess, ambient);
 	this->transform = new transformation();
@@ -16,12 +17,12 @@ body::~body()
 
 void body::defineVeritices()
 {
-
 	GLfloat width = 1.5;
 	GLfloat depth = 1.5;
 	GLfloat hight = 1.0;
 
 	glm::vec3 normals[40];
+	glm::vec3 pColours[40];
 	GLfloat x = width;
 	GLfloat y = hight / 5;
 	GLfloat z = depth / 2;
@@ -108,6 +109,18 @@ void body::defineVeritices()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, isize * sizeof(GLuint), pindices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	/* Define colours as the x,y,z components of the sphere vertices */
+	for (int i = 0; i < this->numberOfVerticies; i++)
+	{
+		pColours[i] = this->colour;
+	}
+
+	/* Store the colours in a buffer object */
+	glGenBuffers(1, &this->colourBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* this->numberOfVerticies, pColours, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void body::drawBody()
@@ -121,6 +134,9 @@ void body::drawBody()
 	glBindBuffer(GL_ARRAY_BUFFER, normalsBufferObject);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, this->colourBuffer);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

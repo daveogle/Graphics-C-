@@ -11,9 +11,11 @@ class tank_track
 	float height;
 	float width;
 	float depth;
-	GLuint trackBufferObject, normalsBufferObject;
+	glm::vec3 colour;
+	GLuint trackBufferObject, normalsBufferObject, colourBuffer;;
 	GLfloat vertexPositions[264];
 	GLfloat normals[198];
+
 
 public:
 	tank_track(float height, float width, float depth, float ambient, float shininess);

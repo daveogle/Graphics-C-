@@ -6,9 +6,21 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	this->height = height;
 	this->width = width;
 	this->depth = depth;
+	this->colour = glm::vec3(0.85, 0.85, 0.85);
 	this->light = new lighting(shininess, ambient);
 	defineVertices();
 	this->transform = new transformation();
+	glm::vec3 pColours[sizeof(this->vertexPositions)];
+	for (int i = 0; i < sizeof(this->vertexPositions); i++)
+	{
+		pColours[i] = this->colour;
+	}
+
+	/* Store the colours in a buffer object */
+	glGenBuffers(1, &this->colourBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeof(this->vertexPositions), pColours, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* Create a vertex buffer object to store vertices */
 	glGenBuffers(1, &this->trackBufferObject);
@@ -247,6 +259,10 @@ void tank_track::defineVertices()
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, normalsBufferObject);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, this->colourBuffer);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glDrawArrays(GL_TRIANGLES, 0, 66);
 	}

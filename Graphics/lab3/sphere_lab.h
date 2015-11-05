@@ -4,7 +4,6 @@
 #pragma once
 
 #include <glload/gl_4_0.h>
-#include <glm/detail/func_trigonometric.inl>
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glloadD.lib")
 #pragma comment(lib, "opengl32.lib")

@@ -1,4 +1,5 @@
 #include "sphere_lab.h"
+#include "math.h"
 
 sphere_lab::sphere_lab(GLuint numlats, GLuint numlongs)
 {
@@ -120,9 +121,9 @@ void sphere_lab::makeUnitSphere(GLfloat *pVertices, GLuint numlats, GLuint numlo
 		{
 			lon_radians = lon * DEG_TO_RADIANS;
 
-			x = glm::cos(lat_radians) * glm::cos(lon_radians);
-			y = glm::cos(lat_radians) * glm::sin(lon_radians);
-			z = glm::sin(lat_radians);
+			x = cos(lat_radians) * cos(lon_radians);
+			y = cos(lat_radians) * sin(lon_radians);
+			z = sin(lat_radians);
 
 			/* Define the vertex */
 			pVertices[vnum*3] = x; pVertices[vnum*3+1] = y; pVertices[vnum*3+2] = z;
