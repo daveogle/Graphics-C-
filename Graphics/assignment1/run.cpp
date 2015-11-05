@@ -29,6 +29,7 @@ track* trackTwo;
 sphere* lightOne;
 sphere* lightTwo;
 body* tankBody;
+transformation* globalTransform;
 //cuboid* testCube;
 
 
@@ -42,6 +43,7 @@ void init(wrapper_glfw *glw)
 	view_z = 5;
 	speed = 1;
 	light_mode = 0;
+	globalTransform = new transformation();
 	lamp_brightness = 1.0f;
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -156,32 +158,35 @@ void display()
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(view_x, view_y, view_z), // Camera is at (0,0,4), in World Space
+		glm::vec3(0, 0, 5), // Camera is at (0,0,4), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
+	glm::mat4 model = globalTransform->getModel();
 	glm::vec4 lightPosition_h = view * glm::vec4(lightOne->transform->getCoords(), 1.0);
 	lightPosition = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
 	glUniform3fv(light_posID, 1, &lightPosition[0]);
 	glUniform1f(lamp_brightnessID, lamp_brightness);
 	glUniform1ui(lightModeID, light_mode);
-
-	setUniforms(view, lightOne->transform->getModel(), lightOne->light);
+	model = model * lightOne->transform->getModel();
+	setUniforms(view, model, lightOne->light);
 	lightOne->drawSphere();
-
+	model = globalTransform->getModel();
 	//setUniforms(view, testCube->transform->getModel(), testCube->light);
 	//testCube->drawCuboid();
 
 	track* tracks[2] = { trackOne, trackTwo };
-
-	setUniforms(view, tankBody->transform->getModel(), tankBody->light);
+	model = model * tankBody->transform->getModel();
+	setUniforms(view, model, tankBody->light);
 	tankBody->drawBody();
-
 	for (int j = 0; j < 2; j++)
 	{
 		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
 		{
-			setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getTrack()->transform->getModel()), tracks[j]->getTrack()->light);
+			model = globalTransform->getModel();
+			model = model * tracks[j]->getTrack()->transform->getModel();
+			model = model * tracks[j]->getTracks()[i]->getModel();
+			setUniforms(view, model, tracks[j]->getTrack()->light);
 			tracks[j]->getTrack()->drawTrack();
 		}
 	}
@@ -215,12 +220,12 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == '5') lightOne->transform->translate(-0.05, 'z');
 	if (key == '6') lightOne->transform->translate(0.05, 'z');
 
-	if (key == GLFW_KEY_UP) view_y += 0.1;
-	if (key == GLFW_KEY_DOWN) view_y -= 0.1;
-	if (key == GLFW_KEY_LEFT) view_x -= 0.1;
-	if (key == GLFW_KEY_RIGHT) view_x += 0.1;
-	if (key == GLFW_KEY_KP_ADD) view_z -= 0.1;
-	if (key == GLFW_KEY_KP_SUBTRACT) view_z += 0.1;
+	if (key == GLFW_KEY_UP) globalTransform->rotate(0.5, 'x');
+	if (key == GLFW_KEY_DOWN) globalTransform->rotate(-0.5, 'x');
+	if (key == GLFW_KEY_LEFT) globalTransform->rotate(0.5, 'y');
+	if (key == GLFW_KEY_RIGHT) globalTransform->rotate(-0.5, 'y');
+	if (key == GLFW_KEY_KP_ADD) globalTransform->rotate(0.5, 'z');
+	if (key == GLFW_KEY_KP_SUBTRACT) globalTransform->rotate(-0.5, 'z');
 
 
 	if (action == GLFW_PRESS)
