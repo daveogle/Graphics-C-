@@ -7,6 +7,9 @@
 
 class body
 {
+	int numberOfVerticies = 23;
+	int isize;
+
 public:
 	transformation* transform;
 	lighting* light;

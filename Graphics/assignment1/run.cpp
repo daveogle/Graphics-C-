@@ -149,17 +149,17 @@ void display()
 	setUniforms(view, tankBody->transform->getModel(), tankBody->light);
 	tankBody->drawBody();
 
-	for (int j = 0; j < 2; j++)
-	{
-		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
-		{
-			setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getTrack()->transform->getModel()), tracks[j]->getTrack()->light);
-			tracks[j]->getTrack()->drawTrack();
-		}
-	}
+	//for (int j = 0; j < 2; j++)
+	//{
+	//	for (int i = 0; i < tracks[j]->getTracks().size(); i++)
+	//	{
+	//		setUniforms(view, tracks[j]->getTracks()[i]->getModel(tracks[j]->getTrack()->transform->getModel()), tracks[j]->getTrack()->light);
+	//		tracks[j]->getTrack()->drawTrack();
+	//	}
+	//}
 
-	trackOne->moveForward(speed);
-	trackTwo->moveForward(-speed);
+	//trackOne->moveForward(speed);
+	//trackTwo->moveForward(-speed);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
