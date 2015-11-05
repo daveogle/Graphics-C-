@@ -30,7 +30,7 @@ sphere* lightOne;
 sphere* lightTwo;
 body* tankBody;
 transformation* globalTransform;
-//cuboid* testCube;
+cylinder* testC;
 
 
 void init(wrapper_glfw *glw)
@@ -101,9 +101,8 @@ void init(wrapper_glfw *glw)
 	tankBody->light->setDiffuse(1.0, 0.0, 0.0);
 	tankBody->transform->rotate(180.0, 'y');
 
-	//testCube = new cuboid(1.0, 1.0, 1.0, 0.2, 50.0);
-	//testCube->light->setDiffuse(1.0, 0.0, 0.0);
-	//testCube->transform->spin(1.0, 'x');
+	testC = new cylinder(1.0, 2.0, 0.2, 50.0);
+	testC->light->setDiffuse(1.0, 0.0, 0.0);
 
 	trackOne = new track();
 	trackTwo = new track();
@@ -172,10 +171,11 @@ void display()
 	setUniforms(view, model, lightOne->light);
 	lightOne->drawSphere();
 	model = globalTransform->getModel();
-	//setUniforms(view, testCube->transform->getModel(), testCube->light);
-	//testCube->drawCuboid();
+	model = model * testC->transform->getModel();
+	setUniforms(view, model, testC->light);
+	testC->drawCyclinder();
 
-	track* tracks[2] = { trackOne, trackTwo };
+	/*track* tracks[2] = { trackOne, trackTwo };
 	model = model * tankBody->transform->getModel();
 	setUniforms(view, model, tankBody->light);
 	tankBody->drawBody();
@@ -192,7 +192,7 @@ void display()
 	}
 
 	trackOne->moveForward(speed);
-	trackTwo->moveForward(-speed);
+	trackTwo->moveForward(-speed);*/
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
