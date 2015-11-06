@@ -9,7 +9,7 @@ track::track()
 	this->n = this->numberOfTracks / 6;
 	this->spacing = (PI * radius) / this->n;
 	this->track_width = spacing * 0.9;
-	this->base_track = new tank_track(0.02, track_width, 0.3, 0.5, 40.0);
+	this->base_track = new tank_track(0.02, track_width, 0.3, 0.2, 70.0);
 	this->endX = PI * this->radius;
 	this->startX = -this->endX;
 	this->actualX = startX;

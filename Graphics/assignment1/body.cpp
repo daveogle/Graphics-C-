@@ -103,7 +103,7 @@ void body::defineVeritices()
 						  22, 28, 30,
 						  26, 32, 34,
 	                      29, 23, 31,
-						  33, 27, 34};	
+						  33, 27, 35};	
 	this->isize = (sizeof(pindices) / sizeof(*pindices));
 	glGenBuffers(1, &elementbuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);

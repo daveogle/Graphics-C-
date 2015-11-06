@@ -11,7 +11,7 @@ in VS_OUT
 } fs_in;
 
 uniform vec3 specular_colour, emissive, global_ambient;
-uniform float shininess, ambient, lamp_brightness;
+uniform float shininess, ambient;
 uniform uint light_mode;
 
 out vec4 outputColor;
@@ -20,7 +20,7 @@ void main()
 {
 	float attenuation = 1.0;
 	float distanceToLight = length(fs_in.L);
-	float attenuation_k = lamp_brightness;
+	float attenuation_k = 1.0f;
 	if(light_mode == 1)
 	{
 		attenuation = 1.0 / (attenuation_k * pow(distanceToLight, 2));
@@ -35,5 +35,5 @@ void main()
 	vec3 diffuse = max(0.0, dot(N, L)) * fs_in.diffuse_colour;
 	vec3 specular = pow(max(dot(N, H), 0.0), shininess) * specular_colour;
 
-	outputColor = vec4(attenuation*(ambient + diffuse + specular) + emissive + global_ambient, 1.0);
+	outputColor = vec4((attenuation*(ambient + diffuse + specular) + emissive + global_ambient), 1.0);
 }

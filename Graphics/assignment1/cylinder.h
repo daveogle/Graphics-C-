@@ -13,7 +13,7 @@ class cylinder
 {
 	glm::vec3 colour;
 	GLfloat radius, length;
-	int definition;
+	GLuint definition;
 	GLuint cylinderBufferObject, cylinderNormals, cylinderColours, cylinderElementbuffer;
 	GLuint num_pvertices;
 	GLuint isize;
@@ -22,7 +22,7 @@ public:
 	transformation* transform;
 	lighting* light;
 
-	cylinder(GLfloat radius, GLfloat length, GLfloat ambient, GLfloat shininess);
+	cylinder(GLfloat ambient, GLfloat shininess);
 	~cylinder();
 	void makeCylinderVBO();
 	void defineVertices();

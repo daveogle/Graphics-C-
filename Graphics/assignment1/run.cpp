@@ -17,11 +17,11 @@ also includes the OpenGL extension initialisation*/
 glm::mat4 projection;
 GLuint light_mode;
 GLuint program, vao;			/*shader & vertex array object*/
-GLfloat speed, lamp_brightness;
+GLfloat speed_r, speed_l;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
 GLfloat view_x, view_y, view_z;
-GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID, lamp_brightnessID, lightModeID;
+GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID, lightModeID;
 glm::vec3 lightPosition, global_ambient;
 
 track* trackOne;
@@ -36,15 +36,15 @@ cylinder* testC;
 void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
-	lightPosition = glm::vec3(-0.5, 0.5, -5.0);
+	lightPosition = glm::vec3(20.0, 0.0, 100.0);
 	global_ambient = glm::vec3(0.05);
 	view_x = 0;
 	view_y = 0;
 	view_z = 5;
-	speed = 1;
+	speed_r = 1;
+	speed_l = 1;
 	light_mode = 0;
 	globalTransform = new transformation();
-	lamp_brightness = 1.0f;
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
 	fprintf(stderr, "RENDERER: %s\n", (char *)glGetString(GL_RENDERER));
@@ -65,8 +65,10 @@ void init(wrapper_glfw *glw)
 	std::cout << "Key down = move view down" << '\n';
 	std::cout << "Key left = move view left" << '\n';
 	std::cout << "Key right = move view right" << '\n';
-	std::cout << "Key , = move tracks faster" << '\n';
-	std::cout << "Key . = move tracks slower" << '\n';
+	std::cout << "Key . = move right tracks faster" << '\n';
+	std::cout << "Key , = move right tracks slower" << '\n';
+	std::cout << "Key X = move left tracks faster" << '\n';
+	std::cout << "Key Z = move left tracks slower" << '\n';
 	std::cout << "Key m = change light mode" << '\n';
 
 	try
@@ -101,13 +103,13 @@ void init(wrapper_glfw *glw)
 	tankBody->light->setDiffuse(1.0, 0.0, 0.0);
 	tankBody->transform->rotate(180.0, 'y');
 
-	testC = new cylinder(1.0, 2.0, 0.2, 50.0);
-	testC->light->setDiffuse(1.0, 0.0, 0.0);
+	testC = new cylinder(0.2, 50.0);
+	//testC->light->setDiffuse(1.0, 0.0, 0.0);
 
 	trackOne = new track();
 	trackTwo = new track();
-	trackOne->getTrack()->transform->translate(-1.0, 'z');
-	trackTwo->getTrack()->transform->translate(1.0, 'z');
+	trackOne->getTrack()->transform->translate(-0.9, 'z');
+	trackTwo->getTrack()->transform->translate(0.9, 'z');
 
 	//Uniform locations
 	projectionID = glGetUniformLocation(program, "projection");
@@ -120,7 +122,6 @@ void init(wrapper_glfw *glw)
 	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
 	emisiveID = glGetUniformLocation(program, "emissive");
 	global_ambientID = glGetUniformLocation(program, "global_ambient");
-	lamp_brightnessID = glGetUniformLocation(program, "lamp_brightness");
 	lightModeID = glGetUniformLocation(program, "light_mode");
 }
 
@@ -161,38 +162,51 @@ void display()
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
-	glm::mat4 model = globalTransform->getModel();
+
+	glm::vec3 lightPosition_p;
 	glm::vec4 lightPosition_h = view * glm::vec4(lightOne->transform->getCoords(), 1.0);
-	lightPosition = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
-	glUniform3fv(light_posID, 1, &lightPosition[0]);
-	glUniform1f(lamp_brightnessID, lamp_brightness);
+
+	glm::mat4 model = glm::mat4(1.0f);
+
+	if (light_mode)
+	{
+		lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
+		glUniform3fv(light_posID, 1, &lightPosition_p[0]);
+
+		model = model * lightOne->transform->getModel();
+		setUniforms(view, model, lightOne->light);
+		lightOne->drawSphere();
+	}
+	else
+	{
+		glUniform3fv(light_posID, 1, &lightPosition[0]);
+	}
 	glUniform1ui(lightModeID, light_mode);
-	model = model * lightOne->transform->getModel();
-	setUniforms(view, model, lightOne->light);
-	lightOne->drawSphere();
+
 	model = globalTransform->getModel();
+	
 	model = model * testC->transform->getModel();
 	setUniforms(view, model, testC->light);
 	testC->drawCyclinder();
 
-	/*track* tracks[2] = { trackOne, trackTwo };
-	model = model * tankBody->transform->getModel();
-	setUniforms(view, model, tankBody->light);
-	tankBody->drawBody();
-	for (int j = 0; j < 2; j++)
-	{
-		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
-		{
-			model = globalTransform->getModel();
-			model = model * tracks[j]->getTrack()->transform->getModel();
-			model = model * tracks[j]->getTracks()[i]->getModel();
-			setUniforms(view, model, tracks[j]->getTrack()->light);
-			tracks[j]->getTrack()->drawTrack();
-		}
-	}
+	//track* tracks[2] = { trackOne, trackTwo };
+	//model = model * tankBody->transform->getModel();
+	//setUniforms(view, model, tankBody->light);
+	//tankBody->drawBody();
+	//for (int j = 0; j < 2; j++)
+	//{
+	//	for (int i = 0; i < tracks[j]->getTracks().size(); i++)
+	//	{
+	//		model = globalTransform->getModel();
+	//		model = model * tracks[j]->getTrack()->transform->getModel();
+	//		model = model * tracks[j]->getTracks()[i]->getModel();
+	//		setUniforms(view, model, tracks[j]->getTrack()->light);
+	//		tracks[j]->getTrack()->drawTrack();
+	//	}
+	//}
 
-	trackOne->moveForward(speed);
-	trackTwo->moveForward(-speed);*/
+	//trackOne->moveForward(speed_r);
+	//trackTwo->moveForward(speed_l);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
@@ -220,20 +234,20 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == '5') lightOne->transform->translate(-0.05, 'z');
 	if (key == '6') lightOne->transform->translate(0.05, 'z');
 
-	if (key == GLFW_KEY_UP) globalTransform->rotate(0.5, 'x');
-	if (key == GLFW_KEY_DOWN) globalTransform->rotate(-0.5, 'x');
-	if (key == GLFW_KEY_LEFT) globalTransform->rotate(0.5, 'y');
-	if (key == GLFW_KEY_RIGHT) globalTransform->rotate(-0.5, 'y');
-	if (key == GLFW_KEY_KP_ADD) globalTransform->rotate(0.5, 'z');
-	if (key == GLFW_KEY_KP_SUBTRACT) globalTransform->rotate(-0.5, 'z');
+	if (key == GLFW_KEY_UP) globalTransform->rotate(1.0, 'x');
+	if (key == GLFW_KEY_DOWN) globalTransform->rotate(-1.0, 'x');
+	if (key == GLFW_KEY_LEFT) globalTransform->rotate(1.0, 'y');
+	if (key == GLFW_KEY_RIGHT) globalTransform->rotate(-1.0, 'y');
+	if (key == GLFW_KEY_KP_ADD) globalTransform->rotate(1.0, 'z');
+	if (key == GLFW_KEY_KP_SUBTRACT) globalTransform->rotate(-1.0, 'z');
 
 
 	if (action == GLFW_PRESS)
 	{
-		if (key == ',') speed -= 1;
-		if (key == '.') speed += 1;
-		if (key == '0') lamp_brightness += 0.05;
-		if (key == '9') lamp_brightness -= 0.05;
+		if (key == ',') speed_r -= 1;
+		if (key == '.') speed_r += 1;
+		if (key == 'X') speed_l += 1;
+		if (key == 'Z') speed_l -= 1;
 		if (key == 'M')
 		{
 			light_mode = !light_mode;
