@@ -22,7 +22,7 @@ public:
 	transformation* transform;
 	lighting* light;
 
-	cylinder(GLfloat ambient, GLfloat shininess);
+	cylinder(GLfloat ambient, GLfloat shininess, glm::vec3 colour);
 	~cylinder();
 	void makeCylinderVBO();
 	void defineVertices();

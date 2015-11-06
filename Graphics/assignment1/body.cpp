@@ -7,6 +7,8 @@ body::body(GLfloat shininess, GLfloat ambient)
 	this->numberOfVerticies = 40;
 	this->light = new lighting(shininess, ambient);
 	this->transform = new transformation();
+	this->base_cylider = new cylinder(0.2, 70.0, this->colour);
+	this->gun_transformation = new transformation();
 	defineVeritices();
 }
 
@@ -141,4 +143,51 @@ void body::drawBody()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawElements(GL_TRIANGLES, this->isize, GL_UNSIGNED_INT, (GLvoid*)0);
+}
+
+glm::vec3 body::getColour()
+{
+	return this->colour;
+}
+
+std::vector<transformation*> body::getGunTransformations()
+{
+	std::vector<transformation*> gun_transformation(3);
+	
+	transformation* turret = new transformation();
+	transformation* barrel = new transformation();
+	transformation* muzzel = new transformation();
+
+	turret->scale(-0.7, 'y');
+	turret->scale(-0.35, 'x');
+	turret->scale(-0.35, 'z');
+	turret->translate(0.3, 'y');
+	gun_transformation[0] = turret;
+
+	barrel->scaleUniform(-0.95);
+	barrel->scale(1.5, 'x');
+	barrel->rotate(-90, 'z');
+	barrel->translate(-1.3, 'x');
+	barrel->translate(0.34, 'y');
+	gun_transformation[1] = barrel;
+
+	muzzel->scaleUniform(-0.92);
+	muzzel->scale(0.1, 'x');
+	muzzel->rotate(-90, 'z');
+	muzzel->translate(-2.1, 'x');
+	muzzel->translate(0.34, 'y');
+	gun_transformation[2] = muzzel;
+	return gun_transformation;
+}
+
+cylinder* body::getBaseCylider()
+{
+	return this->base_cylider;
+}
+
+glm::mat4 body::spinTurret(float amount)
+{
+	glm::mat4 turretModel = glm::mat4(1.0f);
+	turretModel = glm::rotate(turretModel, -amount, glm::vec3(0, 1, 0));
+	return turretModel;
 }

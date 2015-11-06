@@ -4,12 +4,15 @@
 #include <vector>
 #include "transformation.h"
 #include "lighting.h"
+#include "cylinder.h"
 
 class body
 {
 	int numberOfVerticies = 23;
 	int isize;
 	glm::vec3 colour;
+	cylinder* base_cylider;
+	transformation* gun_transformation;
 
 public:
 	transformation* transform;
@@ -20,5 +23,9 @@ public:
 	~body();
 	void defineVeritices();
 	void drawBody();
+	glm::vec3 getColour();
+	std::vector<transformation*> getGunTransformations();
+	cylinder* getBaseCylider();
+	glm::mat4 spinTurret(float amount);
 };
 

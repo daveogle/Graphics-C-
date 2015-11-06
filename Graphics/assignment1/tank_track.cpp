@@ -6,7 +6,7 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	this->height = height;
 	this->width = width;
 	this->depth = depth;
-	this->colour = glm::vec3(0.85, 0.85, 0.85);
+	this->colour = glm::vec3(0.75294, 0.75294, 0.75294);
 	this->light = new lighting(shininess, ambient);
 	defineVertices();
 	this->transform = new transformation();
@@ -15,12 +15,6 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	{
 		pColours[i] = this->colour;
 	}
-
-	/* Store the colours in a buffer object */
-	glGenBuffers(1, &this->colourBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeof(this->vertexPositions), pColours, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* Create a vertex buffer object to store vertices */
 	glGenBuffers(1, &this->trackBufferObject);
@@ -32,6 +26,12 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	glGenBuffers(1, &this->normalsBufferObject);
 	glBindBuffer(GL_ARRAY_BUFFER, this->normalsBufferObject);
 	glBufferData(GL_ARRAY_BUFFER, 66 * sizeof(glm::vec3), this->normals, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	/* Store the colours in a buffer object */
+	glGenBuffers(1, &this->colourBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeof(this->vertexPositions), pColours, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

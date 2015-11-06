@@ -3,9 +3,9 @@
 #define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 #include <iostream>
 
-cylinder::cylinder(GLfloat ambient, GLfloat shininess)
+cylinder::cylinder(GLfloat ambient, GLfloat shininess, glm::vec3 colour)
 {
-	this->colour = glm::vec3(0.1, 0.0, 0.0);
+	this->colour = colour;
 	this->radius = 1.0f;
 	this->length = 1.0f;
 	this->definition = 100; //number of verticies around the circle
@@ -61,12 +61,13 @@ void cylinder::makeCylinderVBO()
 
 		//define vertex at the center/top of the cylider
 		vertices[0] = glm::vec3(0, halfLength, 0);
+		normals[0] = glm::vec3(0.0, 1.0, 0.0);
+		colour[0] = this->colour;
 
 		//for every point around the circle
 		for (int i = 1; i < this->definition +1; i++)
 		{
 			GLfloat theta = (2 * PI) / this->definition * i;
-			//GLfloat nextTheta = (float(i) + 1)* 2.0 * PI;
 
 			GLfloat x = radius * cos(theta);
 			GLfloat y = halfLength;
@@ -77,12 +78,13 @@ void cylinder::makeCylinderVBO()
 			colour[i] = this->colour;
 		}
 		vertices[101] = glm::vec3(0, -halfLength, 0);
+		normals[101] = glm::vec3(0.0, -1.0, 0.0);
+		colour[101] = this->colour;
 
 		//for every point around the circle
 		for (int i = 102; i < (this->definition*2) + 2; i++)
 		{
 			GLfloat theta = (2 * PI) / this->definition * (i - 102);
-			//GLfloat nextTheta = (float(i) + 1)* 2.0 * PI;
 			
 			GLfloat x = radius * cos(theta);
 			GLfloat y = -halfLength;

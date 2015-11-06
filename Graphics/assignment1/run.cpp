@@ -17,7 +17,7 @@ also includes the OpenGL extension initialisation*/
 glm::mat4 projection;
 GLuint light_mode;
 GLuint program, vao;			/*shader & vertex array object*/
-GLfloat speed_r, speed_l;
+GLfloat speed_r, speed_l, turret_spin;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
 GLfloat view_x, view_y, view_z;
@@ -27,7 +27,6 @@ glm::vec3 lightPosition, global_ambient;
 track* trackOne;
 track* trackTwo;
 sphere* lightOne;
-sphere* lightTwo;
 body* tankBody;
 transformation* globalTransform;
 cylinder* testC;
@@ -69,6 +68,8 @@ void init(wrapper_glfw *glw)
 	std::cout << "Key , = move right tracks slower" << '\n';
 	std::cout << "Key X = move left tracks faster" << '\n';
 	std::cout << "Key Z = move left tracks slower" << '\n';
+	std::cout << "Key G = move turret left" << '\n';
+	std::cout << "Key H = move turret right" << '\n';
 	std::cout << "Key m = change light mode" << '\n';
 
 	try
@@ -94,17 +95,12 @@ void init(wrapper_glfw *glw)
 	lightOne->transform->scaleUniform(-0.9);
 	lightOne->transform->translate(1.0, 'y');
 
-	lightTwo = new sphere(200, 200, 0.5, 10.0);
-	lightTwo->light->setDiffuse(1.0, 1.0, 1.0);
-	lightTwo->light->emitLight(true);
-	lightTwo->transform->scaleUniform(-0.9);
-
-	tankBody = new body(90.0, 0.1);
-	tankBody->light->setDiffuse(1.0, 0.0, 0.0);
+	tankBody = new body(70.0, 0.02);
+	tankBody->light->setDiffuse(tankBody->getColour().x, tankBody->getColour().y, tankBody->getColour().z);
 	tankBody->transform->rotate(180.0, 'y');
 
-	testC = new cylinder(0.2, 50.0);
-	//testC->light->setDiffuse(1.0, 0.0, 0.0);
+	//testC = new cylinder(0.2, 50.0);
+	////testC->light->setDiffuse(1.0, 0.0, 0.0);
 
 	trackOne = new track();
 	trackTwo = new track();
@@ -158,7 +154,7 @@ void display()
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(0, 0, 5), // Camera is at (0,0,4), in World Space
+		glm::vec3(0, 0, -7), // Camera is at (0,0,4), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
@@ -183,30 +179,46 @@ void display()
 	}
 	glUniform1ui(lightModeID, light_mode);
 
-	model = globalTransform->getModel();
+	model = globalTransform->getModel(); //global transformations
+
+	track* tracks[2] = { trackOne, trackTwo };
+
+	glm::mat4 tankModel = model * tankBody->transform->getModel(); //tank body transforms
+
+	setUniforms(view, tankModel, tankBody->light);
+	tankBody->drawBody();
 	
-	model = model * testC->transform->getModel();
-	setUniforms(view, model, testC->light);
-	testC->drawCyclinder();
+	glm::mat4 turretModel = tankBody->spinTurret(turret_spin);
 
-	//track* tracks[2] = { trackOne, trackTwo };
-	//model = model * tankBody->transform->getModel();
-	//setUniforms(view, model, tankBody->light);
-	//tankBody->drawBody();
-	//for (int j = 0; j < 2; j++)
-	//{
-	//	for (int i = 0; i < tracks[j]->getTracks().size(); i++)
-	//	{
-	//		model = globalTransform->getModel();
-	//		model = model * tracks[j]->getTrack()->transform->getModel();
-	//		model = model * tracks[j]->getTracks()[i]->getModel();
-	//		setUniforms(view, model, tracks[j]->getTrack()->light);
-	//		tracks[j]->getTrack()->drawTrack();
-	//	}
-	//}
+	for (int i = 0; i < 3; i++) //3 parts to gun
+	{
+		glm::mat4 guntransform = turretModel * tankBody->getGunTransformations()[i]->getModel();
+		guntransform = tankModel * guntransform;
+		setUniforms(view, guntransform, tankBody->light);
+		tankBody->getBaseCylider()->drawCyclinder();
+	}
 
-	//trackOne->moveForward(speed_r);
-	//trackTwo->moveForward(speed_l);
+	for (int j = 0; j < 2; j++)
+	{
+		model = globalTransform->getModel();
+		glm::mat4 trackModel = tankModel * tracks[j]->getTrack()->transform->getModel(); //track transforms
+
+		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
+		{
+			model = trackModel * tracks[j]->getTracks()[i]->getModel(); //individual tracks
+			setUniforms(view, model, tracks[j]->getTrack()->light);
+			tracks[j]->getTrack()->drawTrack();
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			model = trackModel * tracks[j]->getWheels()[i]->getModel(); //wheels
+			setUniforms(view, model, tracks[j]->getBaseWheel()->light);
+			tracks[j]->getBaseWheel()->drawCyclinder();
+		}
+	}
+
+	trackOne->moveForward(speed_r);
+	trackTwo->moveForward(speed_l);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
@@ -240,6 +252,8 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == GLFW_KEY_RIGHT) globalTransform->rotate(-1.0, 'y');
 	if (key == GLFW_KEY_KP_ADD) globalTransform->rotate(1.0, 'z');
 	if (key == GLFW_KEY_KP_SUBTRACT) globalTransform->rotate(-1.0, 'z');
+	if (key == 'H') turret_spin += 1;
+	if (key == 'G') turret_spin -= 1;
 
 
 	if (action == GLFW_PRESS)
