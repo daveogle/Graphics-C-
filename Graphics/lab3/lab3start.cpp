@@ -19,7 +19,7 @@ if you prefer */
 also includes the OpenGL extension initialisation*/
 #include "wrapper_glfw.h"
 #include <iostream>
-#include "sphere.h"
+#include "sphere_lab.h"
 /* Include GLM core and matrix extensions*/
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
@@ -42,7 +42,7 @@ GLuint colourmodeID, ambientID, light_dirID, lightmodeID, emitID;
 glm::vec3 lightDirection;
 GLboolean emit;
 GLfloat aspect_ratio, shininess;		/* Aspect ratio of the window defined in the reshape callback*/
-sphere* new_sphere;
+sphere_lab* new_sphere;
 /*
 This function is called before entering the main rendering loop.
 Use it for all your initialisation stuff
@@ -203,12 +203,30 @@ void init(GLWrapper *glw)
 	/* Manually specified normals for our cube */
 	GLfloat normals[] =
 	{
-		0, 0, -1.f, 0, 0, -1.f, 0, 0, -1.f,
-		0, 0, -1.f, 0, 0, -1.f, 0, 0, -1.f,
-		1.f, 0, 0, 1.f, 0, 0, 1.f, 0, 0,
-		1.f, 0, 0, 1.f, 0, 0, 1.f, 0, 0,
-		0, 0, 1.f, 0, 0, 1.f, 0, 0, 1.f,
-		0, 0, 1.f, 0, 0, 1.f, 0, 0, 1.f,
+		0, 0, -1.f, 
+		0, 0, -1.f,
+		0, 0, -1.f,
+
+		0, 0, -1.f, 
+		0, 0, -1.f, 
+		0, 0, -1.f,
+
+		1.f, 0, 0, 
+		1.f, 0, 0, 
+		1.f, 0, 0,
+
+		1.f, 0, 0, 
+		1.f, 0, 0, 
+		1.f, 0, 0,
+
+		0, 0, 1.f,
+		0, 0, 1.f, 
+		0, 0, 1.f,
+
+		0, 0, 1.f, 
+		0, 0, 1.f, 
+		0, 0, 1.f,
+
 		-1.f, 0, 0, -1.f, 0, 0, -1.f, 0, 0,
 		-1.f, 0, 0, -1.f, 0, 0, -1.f, 0, 0,
 		0, -1.f, 0, 0, -1.f, 0, 0, -1.f, 0,
@@ -236,7 +254,7 @@ void init(GLWrapper *glw)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* create the sphere object */
-	new_sphere = new sphere();
+	new_sphere = new sphere_lab(200, 200);
 	/* Load and build the vertex and fragment shaders */
 	try
 	{
@@ -387,7 +405,7 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == 'V') y += 0.05f;
 	if (key == 'B') z -= 0.05f;
 	if (key == 'N') z += 0.05f;
-	if (key == 'H') emit = !emit;
+	if (key == 'H' && action==GLFW_PRESS) emit = !emit;
 	if (key == GLFW_KEY_LEFT) lightDirection[0] -= 10.0;
 	if (key == GLFW_KEY_RIGHT) lightDirection[0] += 10.0;
 	if (key == GLFW_KEY_DOWN) lightDirection[1] -= 10.0;

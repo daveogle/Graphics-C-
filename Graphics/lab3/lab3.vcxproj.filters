@@ -18,7 +18,7 @@
     <ClInclude Include="wrapper_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sphere.h">
+    <ClInclude Include="sphere_lab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -26,10 +26,10 @@
     <ClCompile Include="lab3start.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sphere.cpp">
+    <ClCompile Include="wrapper_glfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wrapper_glfw.cpp">
+    <ClCompile Include="sphere_lab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

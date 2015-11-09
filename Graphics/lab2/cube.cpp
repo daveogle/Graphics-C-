@@ -28,6 +28,8 @@ cube::cube()
 		0.25f, -0.25f, 0.25f, 1.f,
 		0.25f, 0.25f, -0.25f, 1.f,
 
+		//
+
 		0.25f, -0.25f, 0.25f, 1.f,
 		0.25f, 0.25f, 0.25f, 1.f,
 		0.25f, 0.25f, -0.25f, 1.f,
@@ -39,6 +41,8 @@ cube::cube()
 		-0.25f, -0.25f, 0.25f, 1.f,
 		-0.25f, 0.25f, 0.25f, 1.f,
 		0.25f, 0.25f, 0.25f, 1.f,
+
+		//
 
 		-0.25f, -0.25f, 0.25f, 1.f,
 		-0.25f, -0.25f, -0.25f, 1.f,
@@ -52,6 +56,7 @@ cube::cube()
 		0.25f, -0.25f, 0.25f, 1.f,
 		0.25f, -0.25f, -0.25f, 1.f,
 
+		//
 		0.25f, -0.25f, -0.25f, 1.f,
 		-0.25f, -0.25f, -0.25f, 1.f,
 		-0.25f, -0.25f, 0.25f, 1.f,
@@ -65,7 +70,7 @@ cube::cube()
 		-0.25f, 0.25f, -0.25f, 1.f
 	};
 
-	#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
+#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 	for (auto i = 0; i < ARRAY_SIZE(vertexPositions); i++)
 	{

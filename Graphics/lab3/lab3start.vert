@@ -49,7 +49,7 @@ void main()
 	if (colourmode == 0)
 		diffuse_colour = colour;
 	else
-		diffuse_colour = vec4(0.0, 1.0, 1.0, 1.0);
+		diffuse_colour = vec4(1.0, 0.0, 0.0, 1.0);
 
 	// Define the vertex colour
 
