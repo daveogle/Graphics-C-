@@ -99,9 +99,6 @@ void init(wrapper_glfw *glw)
 	tankBody->light->setDiffuse(tankBody->getColour().x, tankBody->getColour().y, tankBody->getColour().z);
 	tankBody->transform->rotate(180.0, 'y');
 
-	//testC = new cylinder(0.2, 50.0);
-	////testC->light->setDiffuse(1.0, 0.0, 0.0);
-
 	trackOne = new track();
 	trackTwo = new track();
 	trackOne->getTrack()->transform->translate(-0.9, 'z');
@@ -200,7 +197,6 @@ void display()
 
 	for (int j = 0; j < 2; j++)
 	{
-		model = globalTransform->getModel();
 		glm::mat4 trackModel = tankModel * tracks[j]->getTrack()->transform->getModel(); //track transforms
 
 		for (int i = 0; i < tracks[j]->getTracks().size(); i++)
@@ -217,8 +213,8 @@ void display()
 		}
 	}
 
-	trackOne->moveForward(speed_r);
-	trackTwo->moveForward(speed_l);
+	trackOne->move(speed_r);
+	trackTwo->move(speed_l);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }

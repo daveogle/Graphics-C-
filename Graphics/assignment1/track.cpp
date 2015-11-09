@@ -89,7 +89,7 @@ void track::setPositions()
 	this->wheel_transformation = wheel_transformation;
 }
 
-void track::moveForward(int speed)
+void track::move(int speed)
 {
 	GLfloat increment = 0.001;
 	if (speed < 0)

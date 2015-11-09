@@ -22,7 +22,7 @@ public:
 	track();
 	~track();
 	void setPositions();
-	void moveForward(int speed);
+	void move(int speed);
 	std::vector<transformation*> getTracks();
 	std::vector<transformation*> getWheels();
 	tank_track* getTrack();
