@@ -25,13 +25,19 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	/* Create the normals  buffer for the cube */
 	glGenBuffers(1, &this->normalsBufferObject);
 	glBindBuffer(GL_ARRAY_BUFFER, this->normalsBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, 66 * sizeof(glm::vec3), this->normals, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(this->normals), this->normals, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* Store the colours in a buffer object */
 	glGenBuffers(1, &this->colourBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeof(this->vertexPositions), pColours, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pColours), pColours, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	/*store textures in buffer object*/
+	glGenBuffers(1, &this->textureBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(this->textures), textures, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -44,6 +50,7 @@ void tank_track::defineVertices()
 {
 	GLfloat* pVertices = new GLfloat[(22 * 3) * 4];
 	GLfloat* normalArray = new GLfloat[(22 * 3) * 3];
+	GLfloat* textureArray = new GLfloat[(22 * 3) * 3];
 	float y = this->height / 2;
 	float x = this->width / 2;
 	float z = this->depth / 2;
@@ -209,6 +216,32 @@ void tank_track::defineVertices()
 	{
 		this->vertexPositions[i] = pVertices[i];
 	}
+
+	int count = 0;
+	for (int i = 0; i < 11; i++) //for each square
+	{
+		textureArray[count] = 0.0f;
+		textureArray[count + 1] = 0.0f;
+		textureArray[count + 2] = 0.0f;
+
+		textureArray[count + 3] = 1.0f;
+		textureArray[count + 4] = 0.0f;
+		textureArray[count + 5] = 0.0f;
+
+		textureArray[count + 6] = 1.0f;
+		textureArray[count + 7] = 1.0f;
+		textureArray[count + 8] = 0.0f;
+
+		textureArray[count + 9] = 0.0f;
+		textureArray[count + 10] = 1.0f;
+		textureArray[count + 11] = 0.0f;
+		count += 12;
+	}
+
+	for (int i = 0; i < startIndex; i++)
+	{
+		this->textures[i] = textureArray[i];
+	}
 }
 
 	//Define normal of a triangle with normal pointing out of screen
@@ -250,7 +283,7 @@ void tank_track::defineVertices()
 		return startIndex;
 	}
 
-	void tank_track::drawTrack()
+	void tank_track::drawTrack(GLuint texID)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, trackBufferObject);
 		glEnableVertexAttribArray(0);
@@ -263,6 +296,12 @@ void tank_track::defineVertices()
 		glEnableVertexAttribArray(2);
 		glBindBuffer(GL_ARRAY_BUFFER, this->colourBuffer);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, this->textureBuffer);
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glBindTexture(GL_TEXTURE_2D, texID);
 
 		glDrawArrays(GL_TRIANGLES, 0, 66);
 	}

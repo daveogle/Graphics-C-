@@ -8,6 +8,7 @@
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 colour;
+layout(location = 3) in vec3 texcoord;
 
 // Uniform variables are passed in from the application
 uniform mat4 model_view, projection;
@@ -22,6 +23,7 @@ out VS_OUT
 	vec3 L[MAX_LIGHTS];
 	vec3 V;
 	vec3 diffuse_colour;
+	vec2 ftexcoord;
 } vs_out;
 
 
@@ -38,4 +40,6 @@ void main()
 	vs_out.diffuse_colour = colour;
 
 	gl_Position = projection * P;
+
+	vs_out.ftexcoord = texcoord.xy;
 }

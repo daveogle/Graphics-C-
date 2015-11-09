@@ -12,10 +12,10 @@ class tank_track
 	float width;
 	float depth;
 	glm::vec3 colour;
-	GLuint trackBufferObject, normalsBufferObject, colourBuffer;;
+	GLuint trackBufferObject, normalsBufferObject, colourBuffer, textureBuffer;
 	GLfloat vertexPositions[264];
-	GLfloat normals[198];
-
+	GLfloat normals[264];
+	GLfloat textures[264];
 
 public:
 	tank_track(float height, float width, float depth, float ambient, float shininess);
@@ -25,6 +25,6 @@ public:
 	void defineVertices();
 	int setNormal(GLfloat* normalArray, std::vector<float> bottomLeft, std::vector<float> topLeft, std::vector<float> bottomRight, int index);
 	int addTriangle(GLfloat* pVertices, std::vector<float> point1, std::vector<float> point2, std::vector<float> point3, int startIndex);
-	void drawTrack();
+	void drawTrack(GLuint texID);
 };
 

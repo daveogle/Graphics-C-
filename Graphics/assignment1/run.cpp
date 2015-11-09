@@ -2,12 +2,14 @@
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glloadD.lib")
 #pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "soil.lib")
 
 /* Include the header to the GLFW wrapper class which
 also includes the OpenGL extension initialisation*/
 #include "wrapper_glfw.h"
 #include <iostream>
 /* Include GLM core and matrix extensions*/
+#include "soil.h"
 #include "cylinder.h"
 #include "cuboid.h"
 #include "sphere.h"
@@ -15,7 +17,7 @@ also includes the OpenGL extension initialisation*/
 #include "body.h"
 
 glm::mat4 projection;
-GLuint light_mode, numberOfLights;
+GLuint light_mode, numberOfLights, texID;
 GLuint program, vao;			/*shader & vertex array object*/
 GLfloat speed_r, speed_l, turret_spin;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
@@ -34,8 +36,37 @@ body* tankBody;
 transformation* globalTransform;
 
 
+void loadTexture(std::string filePath)
+{
+	const char *c_filePath = filePath.c_str();
+	try
+	{
+		/* Not actually needed if using one texture at a time */
+		//glActiveTexture(GL_TEXTURE0);
+
+		/* load an image file directly as a new OpenGL texture */
+		texID = SOIL_load_OGL_texture(c_filePath, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+			SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+		/* check for an error during the load process */
+		if (texID == 0)
+		{
+			printf("TexID SOIL loading error: '%s'\n", SOIL_last_result());
+		}
+
+		/* Standard bit of code to enable a uniform sampler for our texture */
+		int loc = glGetUniformLocation(program, "tex1");
+		if (loc >= 0) glUniform1i(loc, 0);
+	}
+	catch (std::exception &e)
+	{
+		printf("\nImage file loading failed.");
+	}
+}
+
 void init(wrapper_glfw *glw)
 {
+	loadTexture("Textures/metal_tread.png");
 	aspect_ratio = width / height;
 	fixedLight_x = 0.0f;
 	fixedLight_y = 0.0;
@@ -232,7 +263,7 @@ void display()
 		{
 			model = trackModel * tracks[j]->getTracks()[i]->getModel(); //individual tracks
 			setUniforms(view, model, tracks[j]->getTrack()->light);
-			tracks[j]->getTrack()->drawTrack();
+			tracks[j]->getTrack()->drawTrack(texID);
 		}
 		for (int i = 0; i < 4; i++)
 		{

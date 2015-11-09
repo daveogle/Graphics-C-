@@ -25,6 +25,7 @@ void body::defineVeritices()
 
 	glm::vec3 normals[40];
 	glm::vec3 pColours[40];
+	glm::vec3 textures[40];
 	GLfloat x = width;
 	GLfloat y = hight / 5;
 	GLfloat z = depth / 2;
