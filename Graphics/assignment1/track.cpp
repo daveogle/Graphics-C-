@@ -9,8 +9,8 @@ track::track()
 	this->n = this->numberOfTracks / 6;
 	this->spacing = (PI * radius) / this->n;
 	this->track_width = spacing * 0.9;
-	this->base_track = new tank_track(0.02, track_width, 0.3, 0.2, 70.0);
-	this->base_wheel = new cylinder(0.2, 70.0, glm::vec3(0.3627, 0.3627, 0.3627));
+	this->base_track = new tank_track(0.02, track_width, 0.3, 0.02, 80.0);
+	this->base_wheel = new cylinder(0.002, 80.0, glm::vec3(0.3627, 0.3627, 0.3627));
 	this->endX = PI * this->radius;
 	this->startX = -this->endX;
 	this->actualX = startX;
@@ -30,7 +30,6 @@ void track::setPositions()
 	for (int i = 0; i < this->numberOfTracks; i++)
 	{
 		transformation* track = new transformation();
-		this->base_track->light->setDiffuse(1.0, 0.0, 0.0);
 
 		if (i < n + 1)
 		{

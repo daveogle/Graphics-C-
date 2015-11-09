@@ -38,9 +38,9 @@ void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
 	fixedLight_x = 0.0f;
-	fixedLight_y = 100.0;
-	fixedLight_z = 50.0;
-	global_ambient = glm::vec3(0.05);
+	fixedLight_y = 0.0;
+	fixedLight_z = 100.0;
+	global_ambient = glm::vec3(0.005);
 	numberOfLights = 2;
 	view_x = 0;
 	view_y = 0;
@@ -113,7 +113,7 @@ void init(wrapper_glfw *glw)
 	lightTwo->transform->translate(1.0, 'y');
 	lightTwo->transform->translate(1.0, 'x');
 
-	tankBody = new body(70.0, 0.02);
+	tankBody = new body(90.0, 0.02);
 	tankBody->light->setDiffuse(tankBody->getColour().x, tankBody->getColour().y, tankBody->getColour().z);
 	tankBody->transform->rotate(180.0, 'y');
 

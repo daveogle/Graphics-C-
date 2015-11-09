@@ -7,7 +7,7 @@ body::body(GLfloat shininess, GLfloat ambient)
 	this->numberOfVerticies = 40;
 	this->light = new lighting(shininess, ambient);
 	this->transform = new transformation();
-	this->base_cylider = new cylinder(0.2, 70.0, this->colour);
+	this->base_cylider = new cylinder(0.2, 60.0, this->colour);
 	this->gun_transformation = new transformation();
 	defineVeritices();
 }
