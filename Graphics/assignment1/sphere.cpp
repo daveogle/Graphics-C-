@@ -1,5 +1,7 @@
 #include "sphere.h"
-
+/*
+Modified from example code on blackboard
+*/
 
 sphere::sphere(GLuint numlats, GLuint numlongs, GLfloat ambient, GLfloat shininess)
 {

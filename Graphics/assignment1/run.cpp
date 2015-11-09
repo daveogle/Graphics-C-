@@ -1,3 +1,4 @@
+/*Modified from example code on blackboard*/
 /* Link to static libraries*/
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glloadD.lib")
@@ -20,7 +21,6 @@ GLuint program, vao;			/*shader & vertex array object*/
 GLfloat speed_r, speed_l, turret_spin;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
-GLfloat view_x, view_y, view_z;
 GLfloat fixedLight_x, fixedLight_y, fixedLight_z;
 GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, 
 	   global_ambientID, lightModeID, numberOfLightsID;
@@ -37,18 +37,18 @@ transformation* globalTransform;
 void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
-	fixedLight_x = 0.0f;
+	fixedLight_x = -40.0f;
 	fixedLight_y = 0.0;
-	fixedLight_z = 100.0;
-	global_ambient = glm::vec3(0.005);
+	fixedLight_z = 40.0;
+	global_ambient = glm::vec3(0.05);
 	numberOfLights = 2;
-	view_x = 0;
-	view_y = 0;
-	view_z = 5;
 	speed_r = 1;
 	speed_l = 1;
 	light_mode = 0;
 	globalTransform = new transformation();
+	globalTransform->rotate(10.0, 'x');
+	globalTransform->rotate(-20.0, 'y');
+
 
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
@@ -113,7 +113,7 @@ void init(wrapper_glfw *glw)
 	lightTwo->transform->translate(1.0, 'y');
 	lightTwo->transform->translate(1.0, 'x');
 
-	tankBody = new body(90.0, 0.02);
+	tankBody = new body(50.0, 0.02);
 	tankBody->light->setDiffuse(tankBody->getColour().x, tankBody->getColour().y, tankBody->getColour().z);
 	tankBody->transform->rotate(180.0, 'y');
 
@@ -324,7 +324,7 @@ void getDesktopResolution(GLfloat& horizontal, GLfloat& vertical)
 int main(int argc, char* argv[])
 {
 	getDesktopResolution(width, height);
-	char* message = "Dave Ogle - Assignment 1";
+	char* message = "Dave Ogle - Assignment 1 - The Tank";
 	wrapper_glfw *glw = new wrapper_glfw(width, height, message);
 
 	if (!ogl_LoadFunctions())

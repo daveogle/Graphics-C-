@@ -1,6 +1,9 @@
 #include "cuboid.h"
 #include <iostream>
 
+/*
+Modified from example code on blackboard
+*/
 
 cuboid::cuboid(float height, float width, float depth, float ambient, float shininess)
 {

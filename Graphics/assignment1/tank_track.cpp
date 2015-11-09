@@ -25,13 +25,13 @@ tank_track::tank_track(float height, float width, float depth, float ambient, fl
 	/* Create the normals  buffer for the cube */
 	glGenBuffers(1, &this->normalsBufferObject);
 	glBindBuffer(GL_ARRAY_BUFFER, this->normalsBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, 66 * sizeof(glm::vec3), this->normals, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(this->normals), this->normals, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/* Store the colours in a buffer object */
 	glGenBuffers(1, &this->colourBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeof(this->vertexPositions), pColours, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pColours), pColours, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

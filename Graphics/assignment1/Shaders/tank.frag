@@ -34,7 +34,8 @@ vec4 getCalculateColour(vec3 Light)
 	vec3 H = normalize(L + V);
 
 	vec3 ambient_colour = fs_in.diffuse_colour * ambient;
-	vec3 diffuse = max(0.0, dot(N, L)) * fs_in.diffuse_colour;
+	float diffuse_comp = max(0.0, dot(N, L));
+	vec3 diffuse = diffuse_comp * fs_in.diffuse_colour;
 	vec3 specular = pow(max(dot(N, H), 0.0), shininess) * specular_colour;
 
 	return vec4((attenuation*(ambient + diffuse + specular) + emissive + global_ambient), 1.0);
@@ -42,7 +43,7 @@ vec4 getCalculateColour(vec3 Light)
 
 void main()
 {	
-	vec4 combinedLighting;
+	vec4 combinedLighting = vec4(0.0f);
 	for(int i = 0; i < numberOfLights; i++)
 	{
 		combinedLighting += getCalculateColour(fs_in.L[i]);

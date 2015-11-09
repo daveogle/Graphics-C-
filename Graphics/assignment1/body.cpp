@@ -3,11 +3,11 @@
 
 body::body(GLfloat shininess, GLfloat ambient)
 {
-	this-> colour = glm::vec3(0.33, 0.368, 0.192);
+	this->colour = glm::vec3(0.08450, 0.2078431, 0.0);
 	this->numberOfVerticies = 40;
 	this->light = new lighting(shininess, ambient);
 	this->transform = new transformation();
-	this->base_cylider = new cylinder(0.2, 60.0, this->colour);
+	this->base_cylider = new cylinder(0.2f, 60.0f, this->colour);
 	this->gun_transformation = new transformation();
 	defineVeritices();
 }

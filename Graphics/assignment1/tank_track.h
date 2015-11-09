@@ -1,6 +1,4 @@
 #pragma once
-#include <glload/gl_4_0.h>
-#include <glload/gl_load.h>
 #include <vector>
 #include "transformation.h"
 #include "lighting.h"
@@ -14,7 +12,7 @@ class tank_track
 	glm::vec3 colour;
 	GLuint trackBufferObject, normalsBufferObject, colourBuffer;;
 	GLfloat vertexPositions[264];
-	GLfloat normals[198];
+	GLfloat normals[264];
 
 
 public:
