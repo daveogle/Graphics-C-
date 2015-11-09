@@ -82,10 +82,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\myfile.frag">
+    <None Include="Shaders\tank.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\myfile.vert">
+    <None Include="Shaders\tank.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -94,8 +94,8 @@
     <ClCompile Include="wrapper_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\myfile.frag" />
-    <None Include="Shaders\myfile.vert" />
+    <None Include="Shaders\tank.frag" />
+    <None Include="Shaders\tank.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

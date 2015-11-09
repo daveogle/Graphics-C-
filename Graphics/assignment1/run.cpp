@@ -15,28 +15,33 @@ also includes the OpenGL extension initialisation*/
 #include "body.h"
 
 glm::mat4 projection;
-GLuint light_mode;
+GLuint light_mode, numberOfLights;
 GLuint program, vao;			/*shader & vertex array object*/
 GLfloat speed_r, speed_l, turret_spin;
 GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat width, height;			/*window width & height*/
 GLfloat view_x, view_y, view_z;
-GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, global_ambientID, lightModeID;
+GLfloat fixedLight_x, fixedLight_y, fixedLight_z;
+GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, 
+	   global_ambientID, lightModeID, numberOfLightsID;
 glm::vec3 lightPosition, global_ambient;
 
 track* trackOne;
 track* trackTwo;
 sphere* lightOne;
+sphere* lightTwo;
 body* tankBody;
 transformation* globalTransform;
-cylinder* testC;
 
 
 void init(wrapper_glfw *glw)
 {
 	aspect_ratio = width / height;
-	lightPosition = glm::vec3(20.0, 0.0, 100.0);
+	fixedLight_x = 0.0f;
+	fixedLight_y = 100.0;
+	fixedLight_z = 50.0;
 	global_ambient = glm::vec3(0.05);
+	numberOfLights = 2;
 	view_x = 0;
 	view_y = 0;
 	view_z = 5;
@@ -44,6 +49,7 @@ void init(wrapper_glfw *glw)
 	speed_l = 1;
 	light_mode = 0;
 	globalTransform = new transformation();
+
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
 	fprintf(stderr, "RENDERER: %s\n", (char *)glGetString(GL_RENDERER));
@@ -52,14 +58,18 @@ void init(wrapper_glfw *glw)
 	std::cout << "WINDOW SIZE = " << width << ':' << height << '\n';
 	std::cout << "Aspect Ratio  = " << aspect_ratio << '\n';
 	std::cout << '\n';
-	std::cout << "Key 1 = move lamp left" << '\n';
-	std::cout << "Key 2 = move lamp right" << '\n';
-	std::cout << "Key 3 = move lamp down" << '\n';
-	std::cout << "Key 4 = move lamp up" << '\n';
-	std::cout << "Key 5 = move lamp forward" << '\n';
-	std::cout << "Key 6 = move lamp back" << '\n';
-	std::cout << "Key 9 = make lamp brighter" << '\n';
-	std::cout << "Key 0 = make lamp dimmer" << '\n';
+	std::cout << "Key 1 = move lamp1 left" << '\n';
+	std::cout << "Key 2 = move lamp1 right" << '\n';
+	std::cout << "Key 3 = move lamp1 down" << '\n';
+	std::cout << "Key 4 = move lamp1 up" << '\n';
+	std::cout << "Key 5 = move lamp1 forward" << '\n';
+	std::cout << "Key 6 = move lamp1 back" << '\n';
+	std::cout << "Key A = move lamp2 left" << '\n';
+	std::cout << "Key D = move lamp2 right" << '\n';
+	std::cout << "Key S = move lamp2 down" << '\n';
+	std::cout << "Key W = move lamp2 up" << '\n';
+	std::cout << "Key E = move lamp2 forward" << '\n';
+	std::cout << "Key R = move lamp2 back" << '\n';
 	std::cout << "Key up = move view up" << '\n';
 	std::cout << "Key down = move view down" << '\n';
 	std::cout << "Key left = move view left" << '\n';
@@ -70,11 +80,11 @@ void init(wrapper_glfw *glw)
 	std::cout << "Key Z = move left tracks slower" << '\n';
 	std::cout << "Key G = move turret left" << '\n';
 	std::cout << "Key H = move turret right" << '\n';
-	std::cout << "Key m = change light mode" << '\n';
+	std::cout << "Key M = change light mode" << '\n';
 
 	try
 	{
-		program = glw->LoadShader("Shaders/myfile.vert", "Shaders/myfile.frag");
+		program = glw->LoadShader("Shaders/tank.vert", "Shaders/tank.frag");
 	}
 	catch (std::exception &e)
 	{
@@ -94,6 +104,14 @@ void init(wrapper_glfw *glw)
 	lightOne->light->emitLight(true);
 	lightOne->transform->scaleUniform(-0.9);
 	lightOne->transform->translate(1.0, 'y');
+	lightOne->transform->translate(-1.0, 'x');
+
+	lightTwo = new sphere(200, 200, 0.5, 10.0);
+	lightTwo->light->setDiffuse(1.0, 1.0, 1.0);
+	lightTwo->light->emitLight(true);
+	lightTwo->transform->scaleUniform(-0.9);
+	lightTwo->transform->translate(1.0, 'y');
+	lightTwo->transform->translate(1.0, 'x');
 
 	tankBody = new body(70.0, 0.02);
 	tankBody->light->setDiffuse(tankBody->getColour().x, tankBody->getColour().y, tankBody->getColour().z);
@@ -116,6 +134,7 @@ void init(wrapper_glfw *glw)
 	emisiveID = glGetUniformLocation(program, "emissive");
 	global_ambientID = glGetUniformLocation(program, "global_ambient");
 	lightModeID = glGetUniformLocation(program, "light_mode");
+	numberOfLightsID = glGetUniformLocation(program, "numberOfLights");
 }
 
 void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
@@ -133,6 +152,9 @@ void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
 
 void display()
 {
+	track* tracks[2] = { trackOne, trackTwo };
+	sphere* lights[2] = { lightOne, lightTwo };
+
 	/* Define the background colour */
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -155,30 +177,37 @@ void display()
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
-
-	glm::vec3 lightPosition_p;
-	glm::vec4 lightPosition_h = view * glm::vec4(lightOne->transform->getCoords(), 1.0);
-
 	glm::mat4 model = glm::mat4(1.0f);
-
-	if (light_mode)
-	{
-		lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
-		glUniform3fv(light_posID, 1, &lightPosition_p[0]);
-
-		model = model * lightOne->transform->getModel();
-		setUniforms(view, model, lightOne->light);
-		lightOne->drawSphere();
-	}
-	else
-	{
-		glUniform3fv(light_posID, 1, &lightPosition[0]);
-	}
-	glUniform1ui(lightModeID, light_mode);
-
 	model = globalTransform->getModel(); //global transformations
 
-	track* tracks[2] = { trackOne, trackTwo };
+	glUniform1ui(numberOfLightsID, numberOfLights);
+	glm::vec3 lightPosition_p;
+	GLfloat lightsPositions[2 * 3];//number of lights
+	for (int i = 0; i < numberOfLights; i++)
+	{
+		int step = i * 3;
+		if (light_mode)
+		{
+			glm::mat4 lightModel = model * lights[i]->transform->getModel();
+			setUniforms(view, lightModel, lights[i]->light);
+			lights[i]->drawSphere();
+			glm::vec4 lightPosition_h = view * lightModel * glm::vec4(lights[i]->transform->getCoords(), 1.0);
+			lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
+			lightsPositions[step] = lightPosition_p.x;
+			lightsPositions[step + 1] = lightPosition_p.y;
+			lightsPositions[step + 2] = lightPosition_p.z;
+			glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+		}
+		else
+		{
+			lightPosition = glm::vec3(fixedLight_x, fixedLight_y, fixedLight_z);
+			lightsPositions[step] = lightPosition.x;
+			lightsPositions[step + 1] = lightPosition.y;
+			lightsPositions[step + 2] = lightPosition.z;
+			glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+		}
+	}
+	glUniform1ui(lightModeID, light_mode);
 
 	glm::mat4 tankModel = model * tankBody->transform->getModel(); //tank body transforms
 
@@ -241,6 +270,13 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == '4') lightOne->transform->translate(0.05, 'y');
 	if (key == '5') lightOne->transform->translate(-0.05, 'z');
 	if (key == '6') lightOne->transform->translate(0.05, 'z');
+
+	if (key == 'D') lightTwo->transform->translate(-0.05, 'x');
+	if (key == 'A') lightTwo->transform->translate(0.05, 'x');
+	if (key == 'R') lightTwo->transform->translate(-0.05, 'y');
+	if (key == 'E') lightTwo->transform->translate(0.05, 'y');
+	if (key == 'S') lightTwo->transform->translate(-0.05, 'z');
+	if (key == 'W') lightTwo->transform->translate(0.05, 'z');
 
 	if (key == GLFW_KEY_UP) globalTransform->rotate(1.0, 'x');
 	if (key == GLFW_KEY_DOWN) globalTransform->rotate(-1.0, 'x');
