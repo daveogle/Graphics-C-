@@ -1,6 +1,4 @@
 #pragma once
-#include <glload/gl_4_0.h>
-#include <glload/gl_load.h>
 #include <vector>
 #include "transformation.h"
 #include "lighting.h"
