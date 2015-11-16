@@ -1,0 +1,6 @@
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\bin\Debug\erlangTests.exe.config
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\bin\Debug\erlangTests.exe
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\bin\Debug\erlangTests.pdb
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\obj\Debug\erlangTests.csprojResolveAssemblyReference.cache
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\obj\Debug\erlangTests.exe
+C:\Users\Dave\Documents\Graphics-C-\erlangTests\erlangTests\obj\Debug\erlangTests.pdb
