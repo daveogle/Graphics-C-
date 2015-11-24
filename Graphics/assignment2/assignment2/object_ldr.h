@@ -4,12 +4,10 @@
    loader
    Iain Martin November 2014
 */
-
-#pragma comment(lib, "soil.lib")
-#include "SOIL.h"
 #include "wrapper_glfw.h"
 #include <vector>
 #include <glm/glm.hpp>
+#include "texture_loader.h"
 
 class object_ldr
 {
@@ -21,7 +19,7 @@ public:
 	void drawObject();
 	void createObject();
 	void smoothNormals();
-	bool loadTexture(const char* textureFile);
+	bool setTexture(const char* textureFile, int textureNumber);
 
 	std::vector<glm::vec4> vertices;
 	std::vector<glm::vec3> normals;
@@ -34,11 +32,11 @@ public:
 	GLuint vbo_mesh_normals;
 	GLuint ibo_mesh_elements;
 	GLuint vbo_mesh_textures;
-	unsigned int texID;
 
 	GLuint attribute_v_coord;
 	GLuint attribute_v_normal;
 	GLuint attribute_v_texture;
+	GLuint textureId;
 
 	GLboolean texture;
 };

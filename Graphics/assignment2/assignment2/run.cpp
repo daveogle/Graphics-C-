@@ -12,21 +12,47 @@ also includes the OpenGL extension initialisation*/
 #include "object_ldr.h"
 #include "cuboid.h"
 #include "terrain_object.h"
+#include "points.h"
 #include <iostream>
+#include <stack>
+
+GLfloat zoom;
+GLfloat angle_x;
+GLfloat angle_x_inc;
+GLfloat angle_y;
+GLfloat angle_y_inc;
+GLfloat angle_z;
+GLfloat angle_z_inc;
+GLfloat scale_x_value;
+GLfloat scale_y_value;
+GLfloat scale_z_value;
+GLfloat x_tanslate;
+GLfloat y_tanslate;
+GLfloat z_tanslate;
 
 /* Include GLM core and matrix extensions*/
-
-glm::mat4 projection;
+int drawmode = 0;									//points vs fill
+GLfloat width, height;								/*window width & height*/
+glm::mat4 projection; 
 GLuint light_mode, numberOfLights, texture_mode;
-GLuint program, vao;			/*shader & vertex array object*/
-GLfloat aspect_ratio;			/* Aspect ratio of the window defined in the reshape callback*/
-GLfloat width, height;			/*window width & height*/
-GLfloat fixedLight_x, fixedLight_y, fixedLight_z;
-GLuint projectionID, modelViewID, normal_matrixID, shininessID, ambientID, specularID, diffuseID, light_posID, emisiveID, 
-	   global_ambientID, lightModeID, numberOfLightsID, textureModeID;
+GLuint mainShader, snowShader, vao;					/*shaders & vertex array object*/
+GLfloat aspect_ratio;								/* Aspect ratio of the window defined in the reshape callback*/
+GLfloat fixedLight_x, fixedLight_y, fixedLight_z;	//fixed light position
 glm::vec3 lightPosition, global_ambient;
 
-transformation *globalTransform;
+//uniform IDs
+GLuint projectionID, snowProjectionID, modelViewID, snowModelID, snowViewID, normal_matrixID, shininessID, 
+	   ambientID, specularID, diffuseID, light_posID, emisiveID,
+	   global_ambientID, lightModeID, numberOfLightsID, textureModeID;
+
+std::stack<glm::mat4>model;
+
+//snowman
+transformation *snowballOne;
+transformation *snowballTwo;
+transformation *eyeOne;
+transformation *eyeTwo;
+lighting *coal;
 
 //Terrain globals
 terrain_object *heightfield;
@@ -35,72 +61,110 @@ GLfloat perlin_scale, perlin_frequency;
 GLfloat land_size;
 lighting *terrainLight;
 
-object_ldr cube;
-lighting *cubeLight;
-transformation *cubeTransform;
+//Snow
+points *snowFlakes;
 
-object_ldr lightBulb;
+//light bulbs
+object_ldr sphere;
 lighting *bulbLight;
 transformation *bulbOne;
 transformation *bulbTwo;
 
 void init(wrapper_glfw *glw)
 {
+	zoom = 10;
+	angle_x = 0.0;
+	angle_x_inc = 0.0;
+	angle_y = 0.0;
+	angle_y_inc = 0.0;
+	angle_z = 0.0;
+	angle_z_inc = 0.0;
+	scale_x_value = 1;
+	scale_y_value = 1;
+	scale_z_value = 1;
+	x_tanslate = 0.0;
+	y_tanslate = -1.0;
+	z_tanslate = 0.0;
+
+	//enable blending
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	texture_mode = 0;
+
 	/* Create the heightfield object */
-	octaves = 1;
+	octaves = 8;
 	perlin_scale = 2.f;
 	perlin_frequency = 1.f;
 	land_size = 50.f;
 	heightfield = new terrain_object(octaves, perlin_frequency, perlin_scale);
-	heightfield->createTerrain(1000, 1000, land_size, land_size);
+	heightfield->createTerrain(200, 200, land_size, land_size);
+	//set texture
+	texture_mode = heightfield->setTexture("../Textures/packed_snow.png");
+	int loc = glGetUniformLocation(mainShader, "tex1");
+	if (loc >= 0) glUniform1i(loc, 0); 
 	heightfield->createObject();
+	//terrain lighting
 	terrainLight = new lighting(2.0f, 0.2f);
-	terrainLight->setDiffuse(0.0, 1.0, 0.0);
+	terrainLight->setDiffuse(1.0, 1.0, 1.0);
+	terrainLight->setSpecular(0.4, 0.4, 0.0);
 
-	texture_mode = 1;
-	cubeLight = new lighting(50.0f, 0.2f);
-	cubeLight->setDiffuse(1.0, 0.0, 0.0);
-	cubeLight->setSpecular(1.0, 0.0, 0.0);
-	cube.load_obj("../Objects/cube.obj");
-	cube.smoothNormals();
-	cube.createObject();
-
-	//Load a texture for the object
-	texture_mode = cube.loadTexture("../Textures/img.png");
-	int loc = glGetUniformLocation(program, "tex1");
-	if (loc >= 0) glUniform1i(loc, 0);
-
-	cubeTransform = new transformation();
-	cubeTransform->scaleUniform(-0.7);
+	//create new snowflake object
+	snowFlakes = new points(2000, -1.5, 0.01);
+	snowFlakes->setTexture("../Textures/snowflake2.png");
+	int snowLec = glGetUniformLocation(snowShader, "snowTex");
+	if (snowLec >= 0) glUniform1i(snowLec, 0);
+	snowFlakes->create();
 	
-	lightBulb.load_obj("../Objects/sphere.obj");
-	lightBulb.createObject();
-	
+	//load sphere from .obj file
+	sphere.load_obj("../Objects/sphere.obj");
+	sphere.smoothNormals();
+	sphere.setTexture("../Textures/packed_snow.png", 0);
+	sphere.createObject();
+
+	/*Snowman*/
+	snowballOne = new transformation();
+	snowballOne->scaleUniform(-0.6);
+	snowballOne->translate(0.4, 'y');
+
+	snowballTwo = new transformation();
+	snowballTwo->scaleUniform(-0.8);
+	snowballTwo->translate(0.9, 'y');
+
+	coal = new lighting(3.0, 0.2);
+	coal->setDiffuse(0.0, 0.0, 0.0);
+	coal->setSpecular(0.01, 0.01, 0.01);
+	eyeOne = new transformation();
+	eyeOne->scaleUniform(-0.95);
+	eyeOne->translate(-1.0, 'z');
+	eyeOne->translate(1.5, 'y');
+
+	//create bulbs
 	bulbOne = new transformation();
 	bulbTwo = new transformation();
-	bulbLight = new lighting(90.0f, 0.2f);
-	bulbLight->setDiffuse(1.0, 1.0, 0.0);
+	bulbLight = new lighting(0.001f, 0.0f);
+	bulbLight->setDiffuse(0.4, 0.4, 0.0);
 	bulbLight->emitLight(true);
-	bulbLight->setEmisive(1.0, 1.0, 0.0);
-
+	bulbLight->setEmisive(0.4, 0.4, 0.0);
 	bulbOne->scaleUniform(-0.9);
 	bulbOne->translate(1.0, 'y');
 	bulbOne->translate(-1.0, 'x');
-
 	bulbTwo->scaleUniform(-0.9);
 	bulbTwo->translate(1.0, 'y');
 	bulbTwo->translate(1.0, 'x');
 
+	//set aspect ratio
 	aspect_ratio = width / height;
+
+	//set fixed light values
 	fixedLight_x = 0.0f;
 	fixedLight_y = 100.0;
 	fixedLight_z = 100.0;
 	global_ambient = glm::vec3(0.05);
 	numberOfLights = 1;
 	light_mode = 0;
-	globalTransform = new transformation();
 
-
+	//print graphics card details
+	GLint maxTextures;
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextures);
 	fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
 	fprintf(stderr, "VERSION: %s\n", (char *)glGetString(GL_VERSION));
 	fprintf(stderr, "RENDERER: %s\n", (char *)glGetString(GL_RENDERER));
@@ -108,8 +172,10 @@ void init(wrapper_glfw *glw)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	std::cout << "WINDOW SIZE = " << width << ':' << height << '\n';
 	std::cout << "Aspect Ratio  = " << aspect_ratio << '\n';
+	std::cout << "Max number of texture units  = " << maxTextures << '\n';
 	std::cout << '\n';
 
+	//print key press instructions
 	std::cout << "Key 1 = move lamp1 left" << '\n';
 	std::cout << "Key 2 = move lamp1 right" << '\n';
 	std::cout << "Key 3 = move lamp1 down" << '\n';
@@ -130,9 +196,11 @@ void init(wrapper_glfw *glw)
 	std::cout << "Key T = change texture mode" << '\n';
 	std::cout << std::endl;
 
+	//load shaders
 	try
 	{
-		program = glw->LoadShader("../Shaders/a2.vert", "../Shaders/a2.frag");
+		mainShader = glw->LoadShader("../Shaders/a2.vert", "../Shaders/a2.frag");
+		snowShader = glw->LoadShader("../Shaders/snowflake.vert", "../Shaders/snowflake.frag");
 	}
 	catch (std::exception &e)
 	{
@@ -147,22 +215,30 @@ void init(wrapper_glfw *glw)
 	// Create the vertex array object and make it current
 	glBindVertexArray(vao);
 
-	//Uniform locations
-	projectionID = glGetUniformLocation(program, "projection");
-	modelViewID = glGetUniformLocation(program, "model_view");
-	shininessID = glGetUniformLocation(program, "shininess");
-	ambientID = glGetUniformLocation(program, "ambient");
-	specularID = glGetUniformLocation(program, "specular_colour");
-	diffuseID = glGetUniformLocation(program, "diffuse_colour");
-	light_posID = glGetUniformLocation(program, "light_pos");
-	normal_matrixID = glGetUniformLocation(program, "normal_matrix");
-	emisiveID = glGetUniformLocation(program, "emissive");
-	global_ambientID = glGetUniformLocation(program, "global_ambient");
-	lightModeID = glGetUniformLocation(program, "light_mode");
-	textureModeID = glGetUniformLocation(program, "texture_mode");
-	numberOfLightsID = glGetUniformLocation(program, "numberOfLights");
+	//Uniform locations Main
+	projectionID = glGetUniformLocation(mainShader, "projection");
+	modelViewID = glGetUniformLocation(mainShader, "model_view");
+	shininessID = glGetUniformLocation(mainShader, "shininess");
+	ambientID = glGetUniformLocation(mainShader, "ambient");
+	specularID = glGetUniformLocation(mainShader, "specular_colour");
+	diffuseID = glGetUniformLocation(mainShader, "diffuse_colour");
+	light_posID = glGetUniformLocation(mainShader, "light_pos");
+	normal_matrixID = glGetUniformLocation(mainShader, "normal_matrix");
+	emisiveID = glGetUniformLocation(mainShader, "emissive");
+	global_ambientID = glGetUniformLocation(mainShader, "global_ambient");
+	lightModeID = glGetUniformLocation(mainShader, "light_mode");
+	textureModeID = glGetUniformLocation(mainShader, "texture_mode");
+	numberOfLightsID = glGetUniformLocation(mainShader, "numberOfLights");
+
+	//Uniform locations Snow
+	snowModelID = glGetUniformLocation(snowShader, "model");
+	snowViewID = glGetUniformLocation(snowShader, "view");
+	snowProjectionID = glGetUniformLocation(snowShader, "projection");
 }
 
+/*
+* Function to set uniform values
+*/
 void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
 {
 	glm::mat4 model_view = view * model;
@@ -178,6 +254,7 @@ void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
 
 void display()
 {
+	//array holding light bulbs
 	transformation* lights[2] = { bulbOne, bulbTwo };
 
 	/* Define the background colour */
@@ -189,8 +266,9 @@ void display()
 	/* Enable depth test  */
 	glEnable(GL_DEPTH_TEST);
 
-	/* Make the compiled shader program current */
-	glUseProgram(program);
+	/* Make the main shader program current */
+	glUseProgram(mainShader);
+
 	glUniform3fv(global_ambientID, 1, &global_ambient[0]);
 	glUniform1ui(textureModeID, 0);
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
@@ -198,13 +276,18 @@ void display()
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(0, 0, 4), // Camera is at (0,0,4), in World Space
+		glm::vec3(0, 0, zoom), // Camera is at (0,0,4), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 
-	glm::mat4 model = glm::mat4(1.0f);
-	model = globalTransform->getModel(); //global transformations
+	model.push(glm::mat4(1.0));
+
+	model.top() = glm::translate(model.top(), glm::vec3(x_tanslate, y_tanslate, z_tanslate));
+	model.top() = glm::scale(model.top(), glm::vec3(scale_x_value, scale_y_value, scale_z_value));
+	model.top() = glm::rotate(model.top(), angle_x, glm::vec3(1, 0, 0));
+	model.top() = glm::rotate(model.top(), angle_y, glm::vec3(0, 1, 0));
+	model.top() = glm::rotate(model.top(), angle_z, glm::vec3(0, 0, 1));
 
 	//set number of lights
 	glm::vec3 lightPosition_p;
@@ -216,9 +299,9 @@ void display()
 		{
 			numberOfLights = 2;
 			glUniform1ui(numberOfLightsID, numberOfLights);
-			glm::mat4 lightModel = model * lights[i]->getModel();
+			glm::mat4 lightModel = model.top() * lights[i]->getModel();
 			setUniforms(view, lightModel, bulbLight);
-			lightBulb.drawObject();
+			sphere.drawObject();
 			glm::vec4 lightPosition_h = view * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
 			lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
 			lightsPositions[step] = lightPosition_p.x;
@@ -237,15 +320,38 @@ void display()
 			glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
 		}
 	}
+
+
 	glUniform1ui(lightModeID, light_mode);
-	setUniforms(view, model, terrainLight);
-	heightfield->drawObject(0);
 
-	glm::mat4 cubeModel = model * cubeTransform->getModel();
-	setUniforms(view, cubeModel, cubeLight);
-	glUniform1ui(textureModeID, texture_mode);
-	cube.drawObject();
+	setUniforms(view, model.top() * eyeOne->getModel(), coal);
+	sphere.drawObject();
 
+	glUniform1ui(textureModeID, texture_mode); //set Texture mode
+
+	setUniforms(view, model.top() * snowballOne->getModel(), terrainLight);
+	sphere.drawObject();
+
+	setUniforms(view, model.top() * snowballTwo->getModel(), terrainLight);
+	sphere.drawObject();
+
+	setUniforms(view, model.top(), terrainLight);
+	heightfield->drawObject(drawmode);
+
+	//render the snow	
+	/* Enable Blending for the analytic point sprite */
+	glUseProgram(snowShader);
+	glEnable(GL_BLEND);
+	model.top() = glm::translate(model.top(), glm::vec3(0.0, 2.0, 0.0));
+	glUniformMatrix4fv(snowModelID, 1, GL_FALSE, &model.top()[0][0]);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	glUniformMatrix4fv(snowViewID, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(snowProjectionID, 1, GL_FALSE, &projection[0][0]);
+
+	snowFlakes->draw();
+	snowFlakes->animate();
+
+	model.pop();
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
@@ -280,14 +386,24 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == 'S') bulbTwo->translate(-0.05, 'z');
 	if (key == 'W') bulbTwo->translate(0.05, 'z');
 
-	if (key == GLFW_KEY_UP) globalTransform->rotate(1.5, 'x');
-	if (key == GLFW_KEY_DOWN) globalTransform->rotate(-1.5, 'x');
-	if (key == GLFW_KEY_LEFT) globalTransform->rotate(1.5, 'y');
-	if (key == GLFW_KEY_RIGHT) globalTransform->rotate(-1.5, 'y');
-	if (key == GLFW_KEY_KP_ADD) globalTransform->rotate(1.5, 'z');
-	if (key == GLFW_KEY_KP_SUBTRACT) globalTransform->rotate(-1.5, 'z');
-	if (key == '+') globalTransform->translate(0.5f, 'z');
-	if (key == '-') globalTransform->translate(-0.5f, 'z');
+	if (key == GLFW_KEY_UP)
+	{
+		angle_x -= 1.5;
+	}
+	if (key == GLFW_KEY_DOWN)
+	{
+		angle_x += 1.5;
+	}
+	if (key == GLFW_KEY_LEFT)
+	{
+		angle_y -= 1.5;
+	}
+	if (key == GLFW_KEY_RIGHT)
+	{
+		angle_y += 1.5;
+	}
+	if (key == GLFW_KEY_KP_ADD) zoom += 1.0;
+	if (key == GLFW_KEY_KP_SUBTRACT) zoom -= 1.0; 
 
 	if (action == GLFW_PRESS)
 	{
@@ -301,6 +417,8 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 			texture_mode = !texture_mode;
 			std::cout << "texture mode changed: " << texture_mode << std::endl;
 		}
+		if (key == 'Z')
+			drawmode = !drawmode;
 	}
 }
 

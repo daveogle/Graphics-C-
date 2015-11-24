@@ -6,7 +6,7 @@
 class points
 {
 public:
-	points(GLuint number, GLfloat dist, GLfloat sp);
+	points(GLuint number, GLfloat floor, GLfloat sp);
 	~points();
 
 	void create();
@@ -14,7 +14,7 @@ public:
 	void animate();
 	void updateParams(GLfloat dist, GLfloat sp);
 
-	glm::vec3 *vertices;
+	glm::vec4 *vertices;
 	glm::vec3 *colours;
 	glm::vec3 *velocity;
 
@@ -26,6 +26,6 @@ public:
 	GLfloat speed;		
 
 	// Particle max distance fomr the origin before we change direction back to the centre
-	GLfloat maxdist;	
+	GLfloat floor;	
 };
 

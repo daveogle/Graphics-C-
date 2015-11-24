@@ -27,6 +27,7 @@ object_ldr::object_ldr()
 	attribute_v_coord = 0;
 	attribute_v_normal = 1;
 	attribute_v_texture = 2;
+	textureId = 0;
 }
 
 
@@ -123,7 +124,7 @@ void object_ldr::createObject()
 
 	glGenBuffers(1, &vbo_mesh_textures);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_textures);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &(normals[0]), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, textures.size() * sizeof(glm::vec3), &(textures[0]), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Generate a buffer for the indices
@@ -177,7 +178,7 @@ void object_ldr::drawObject()
 			0,                  // no extra data between each position
 			(void*)0            // offset of first element
 			);
-		glBindTexture(GL_TEXTURE_2D, texID);
+		glBindTexture(GL_TEXTURE_2D, textureId);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_mesh_elements); 
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -217,35 +218,10 @@ void object_ldr::smoothNormals()
 
 }
 
-bool object_ldr::loadTexture(const char* textureFile)
+bool object_ldr::setTexture(const char* textureFile, int textureNumber)
 {
-	try
-	{
-		/* Not actually needed if using one texture at a time */
-		glActiveTexture(GL_TEXTURE0);
-
-		/* load an image file directly as a new OpenGL texture */
-		texID = SOIL_load_OGL_texture(textureFile, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-			SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-
-		/* check for an error during the load process */
-		if (texID == 0)
-		{
-			printf("TexID SOIL loading error: '%s'\n", SOIL_last_result());
-			return false;
-		}
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	}
-	catch (std::exception &e)
-	{
-		printf("\nImage file loading failed.");
-		return false;
-	}
-	return true;
+	textureId = texture_loader::loadTexture(textureFile, textureNumber);
+	if (textureId != 0)
+		return texture = true;
+	return texture = false;
 }

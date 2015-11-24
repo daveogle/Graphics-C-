@@ -25,7 +25,7 @@ if you prefer */
 #include <glm/gtc/type_ptr.hpp>
 
 /* Include the hacked version of SOIL */
-//#include "SOIL.h"
+#include "soil.h"
 
 #include "points.h"
 
@@ -51,7 +51,6 @@ GLuint drawmode;			// Defines drawing mode of sphere as points, lines or filled 
 /* Uniforms*/
 GLuint modelID, viewID, projectionID;
 GLuint colourmodeID;
-GLfloat point_sizeID;
 
 GLfloat aspect_ratio;		/* Aspect ratio of the window defined in the reshape callback*/
 
@@ -92,7 +91,7 @@ void init(GLWrapper *glw)
 	{
 		/* To show the analytic version, change file name of the fragment shader 
 		   to "point_sprites_analytic.frag" */
-		program = glw->LoadShader("point_sprites.vert", "point_sprites_analytic.frag");
+		program = glw->LoadShader("point_sprites.vert", "point_sprites.frag");
 	}
 	catch (std::exception &e)
 	{
@@ -104,7 +103,6 @@ void init(GLWrapper *glw)
 	// Define uniforms to send to vertex shader 
 	modelID = glGetUniformLocation(program, "model");
 	colourmodeID = glGetUniformLocation(program, "colourmode");
-	point_sizeID = glGetUniformLocation(program, "size");
 	viewID = glGetUniformLocation(program, "view");
 	projectionID = glGetUniformLocation(program, "projection");
 
@@ -118,7 +116,7 @@ void init(GLWrapper *glw)
 		glActiveTexture(GL_TEXTURE0);
 
 		/* load an image file directly as a new OpenGL texture */
-		texID = SOIL_load_OGL_texture("star.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+		texID = SOIL_load_OGL_texture("snowflake2.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
 			SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
 
 		/* check for an error during the load process */
@@ -149,11 +147,10 @@ void init(GLWrapper *glw)
 	int loc = glGetUniformLocation(program, "tex1");
 	if (loc >= 0) glUniform1i(loc, 0);
 
-	speed = 2.f;
-	maxdist = 1.f;
+	speed = 0.005f;
+	maxdist = -1.0f;
 	point_anim = new points(1000, maxdist, speed);
 	point_anim->create();
-	point_size = 8;
 }
 
 /* Called to update the display. Note that this function is called in the event loop in the wrapper
@@ -196,7 +193,7 @@ void display()
 	// Send our uniforms variables to the currently bound shader,
 	glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
 	glUniform1ui(colourmodeID, colourmode);
-	glUniform1f(point_sizeID, point_size);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glUniformMatrix4fv(viewID, 1, GL_FALSE, &View[0][0]);
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &Projection[0][0]);
 

@@ -76,7 +76,7 @@ void init(GLWrapper *glw)
 	glBindVertexArray(vao);
 
 	/* Create the heightfield object */
-	octaves = 1;
+	octaves = 6;
 	perlin_scale = 2.f;
 	perlin_frequency = 1.f;
 	land_size = 50.f;

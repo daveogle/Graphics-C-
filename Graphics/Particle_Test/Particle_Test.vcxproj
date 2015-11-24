@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="points.h" />
+    <ClInclude Include="SOIL.h" />
     <ClInclude Include="wrapper_glfw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

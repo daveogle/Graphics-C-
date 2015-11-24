@@ -9,6 +9,7 @@
 #include "wrapper_glfw.h"
 #include <vector>
 #include <glm/glm.hpp>
+#include "texture_loader.h"
 
 class terrain_object
 {
@@ -25,6 +26,7 @@ public:
 	void createTerrain(GLuint xp, GLuint yp, GLfloat xs, GLfloat ys);
 	void createObject();
 	void drawObject(int drawmode);
+	bool setTexture(const char* textureFile);
 
 	GLboolean texture;
 

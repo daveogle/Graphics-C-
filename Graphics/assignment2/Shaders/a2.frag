@@ -38,7 +38,6 @@ vec4 getCalculateColour(vec3 Light)
 	float diffuse_comp = max(0.0, dot(N, L));
 	vec3 diffuse = diffuse_comp * diffuse_colour;
 	vec3 specular = pow(max(dot(N, H), 0.0), shininess) * specular_colour;
-
 	return vec4((attenuation*(ambient + diffuse + specular) + emissive + global_ambient), 1.0);
 }
 

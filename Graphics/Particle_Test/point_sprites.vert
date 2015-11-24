@@ -3,7 +3,7 @@
 #version 400
 
 // These are the vertex attributes
-layout(location = 0) in vec3 position;
+layout(location = 0) in vec4 position;
 layout(location = 1) in vec3 colour;
 
 
@@ -13,12 +13,11 @@ uniform uint colourmode;
 
 // Output the vertex colour - to be rasterized into pixel fragments
 out vec4 fcolour;
-uniform float size;
 
 void main()
 {
 	vec4 colour_h = vec4(colour, 1.0);
-	vec4 pos = vec4(position, 1.0);
+	vec4 pos = vec4(position.xyz, 1.0);
 	vec4 pos2 = model * pos;
 	
 	// Pass through the vertex colour
@@ -26,7 +25,6 @@ void main()
 
 	// Define the vertex position
 	gl_Position = projection * view * model * pos;
-
-	gl_PointSize = (1.0 - pos2.z / pos2.w) * size;
+	gl_PointSize = position.w;
 }
 

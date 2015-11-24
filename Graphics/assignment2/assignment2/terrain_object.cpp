@@ -124,7 +124,6 @@ void terrain_object::drawObject(int drawmode)
 	}
 }
 
-
 /* Define the terrian heights */
 /* Uses code adapted from OpenGL Shading Language Cookbook: Chapter 8 */
 void terrain_object::calculateNoise()
@@ -211,13 +210,36 @@ void terrain_object::createTerrain(GLuint xp, GLuint zp, GLfloat xs, GLfloat zs)
 		xpos += xpos_step;
 	}
 
+	int texture_span = 5;
+
 	//Define texture coords
-	for (int i = 0; i < numvertices; i += 4)
+	//grid = 100 X 100 
+	int countX = 0;
+	int countZ = texture_span;
+	int zop = 1;
+	int xop = 1;
+	for (GLuint x = 0; x < xsize; x++)
 	{
-		textures[i] = glm::vec3(0.0f, 0.0f, 0);
-		textures[i + 1] = glm::vec3(1.0f, 0.0f, 0);
-		textures[i + 2] = glm::vec3(1.0f, 1.0f, 0);
-		textures[i + 3] = glm::vec3(0.0f, 1.0f, 0);
+		for (GLuint z = 0; z < zsize; z++)
+		{
+			float cx = (float)countX / texture_span;
+			float cz = (float)countZ / texture_span;
+			textures[x*zsize + z] = glm::vec3(cx, cz, 0.0f);
+			//std::cout << "x:z = " << cx << ":" << cz << std::endl;
+			countZ -= zop;
+			if (z == zsize - 1)
+			{
+				zop = 1;
+				countZ = texture_span;
+			}
+			else if (countZ <= 0 || countZ == texture_span)
+			{
+					zop = zop  * -1;
+			}
+		}
+		countX += xop;
+		if (countX == texture_span || countX <= 0)
+			xop = xop  * -1;
 	}
 
 	/* Define vertices for triangle strips */
@@ -323,5 +345,13 @@ void terrain_object::defineSea(GLfloat sealevel)
 			vertices[v].y = sealevel;
 		}
 	}
+}
+
+bool terrain_object::setTexture(const char* textureFile)
+{
+	texID = texture_loader::loadTexture(textureFile, 0);
+	if (texID != 0)
+		return texture = true;
+	return texture = false;
 }
 

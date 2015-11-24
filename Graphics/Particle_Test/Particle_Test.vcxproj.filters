@@ -32,5 +32,8 @@
     <ClInclude Include="wrapper_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SOIL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

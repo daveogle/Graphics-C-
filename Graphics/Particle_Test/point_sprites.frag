@@ -11,8 +11,11 @@ void main()
 {
 	vec4 texcolour = texture(tex1, gl_PointCoord);
 
-	/* Discard the black colours to avoid them overwritting other stars*/
-	if (texcolour.r < 0.1 && texcolour.g < 0.1 && texcolour.b < 0.1) discard;
+	/* Discard the white colours and turn the black white*/
+	//if (texcolour.r > 0.9 && texcolour.g > 0.9 && texcolour.b > 0.9) 
+		//discard;
+	if(texcolour.r < 0.1 && texcolour.g < 0.1 && texcolour.b < 0.1)
+		discard;//texcolour.r = texcolour.g = texcolour.b = 1.0;
 
 	outputColor = fcolour * texcolour;
 }
