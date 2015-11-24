@@ -26,7 +26,7 @@ public:
 	void createTerrain(GLuint xp, GLuint yp, GLfloat xs, GLfloat ys);
 	void createObject();
 	void drawObject(int drawmode);
-	bool setTexture(const char* textureFile);
+	unsigned int setTexture(const char* textureFile);
 
 	GLboolean texture;
 

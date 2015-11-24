@@ -45,6 +45,8 @@ GLuint projectionID, snowProjectionID, modelViewID, snowModelID, snowViewID, nor
 	   ambientID, specularID, diffuseID, light_posID, emisiveID,
 	   global_ambientID, lightModeID, numberOfLightsID, textureModeID;
 
+GLuint snowTexOne, snowTexTwo, coalTex;
+
 std::stack<glm::mat4>model;
 
 //snowman
@@ -88,7 +90,7 @@ void init(wrapper_glfw *glw)
 
 	//enable blending
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	texture_mode = 0;
+	texture_mode = 1;
 
 	/* Create the heightfield object */
 	octaves = 8;
@@ -98,7 +100,7 @@ void init(wrapper_glfw *glw)
 	heightfield = new terrain_object(octaves, perlin_frequency, perlin_scale);
 	heightfield->createTerrain(200, 200, land_size, land_size);
 	//set texture
-	texture_mode = heightfield->setTexture("../Textures/packed_snow.png");
+	snowTexOne = heightfield->setTexture("../Textures/packed_snow.png");
 	int loc = glGetUniformLocation(mainShader, "tex1");
 	if (loc >= 0) glUniform1i(loc, 0); 
 	heightfield->createObject();
@@ -117,7 +119,8 @@ void init(wrapper_glfw *glw)
 	//load sphere from .obj file
 	sphere.load_obj("../Objects/sphere.obj");
 	sphere.smoothNormals();
-	sphere.setTexture("../Textures/packed_snow.png", 0);
+	snowTexTwo = sphere.setTexture("../Textures/icy_snow.png", 0);
+	coalTex = sphere.setTexture("../Textures/coal.png", 0);
 	sphere.createObject();
 
 	/*Snowman*/
@@ -129,13 +132,14 @@ void init(wrapper_glfw *glw)
 	snowballTwo->scaleUniform(-0.8);
 	snowballTwo->translate(0.9, 'y');
 
-	coal = new lighting(3.0, 0.2);
+	//eyes
+	coal = new lighting(20.0, 0.2);
 	coal->setDiffuse(0.0, 0.0, 0.0);
 	coal->setSpecular(0.01, 0.01, 0.01);
 	eyeOne = new transformation();
-	eyeOne->scaleUniform(-0.95);
-	eyeOne->translate(-1.0, 'z');
-	eyeOne->translate(1.5, 'y');
+	eyeOne->scaleUniform(-0.98);
+	eyeOne->translate(-0.20, 'z');
+	eyeOne->translate(1.0, 'y');
 
 	//create bulbs
 	bulbOne = new transformation();
@@ -301,7 +305,7 @@ void display()
 			glUniform1ui(numberOfLightsID, numberOfLights);
 			glm::mat4 lightModel = model.top() * lights[i]->getModel();
 			setUniforms(view, lightModel, bulbLight);
-			sphere.drawObject();
+			sphere.drawObject(0);
 			glm::vec4 lightPosition_h = view * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
 			lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
 			lightsPositions[step] = lightPosition_p.x;
@@ -321,19 +325,17 @@ void display()
 		}
 	}
 
-
 	glUniform1ui(lightModeID, light_mode);
-
-	setUniforms(view, model.top() * eyeOne->getModel(), coal);
-	sphere.drawObject();
-
 	glUniform1ui(textureModeID, texture_mode); //set Texture mode
 
+	setUniforms(view, model.top() * eyeOne->getModel(), coal);
+	sphere.drawObject(coalTex);
+
 	setUniforms(view, model.top() * snowballOne->getModel(), terrainLight);
-	sphere.drawObject();
+	sphere.drawObject(snowTexTwo);
 
 	setUniforms(view, model.top() * snowballTwo->getModel(), terrainLight);
-	sphere.drawObject();
+	sphere.drawObject(snowTexTwo);
 
 	setUniforms(view, model.top(), terrainLight);
 	heightfield->drawObject(drawmode);

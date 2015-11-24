@@ -70,7 +70,6 @@ void points::draw()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, snowTexID);
 	/* Draw our points*/
 	glDrawArrays(GL_POINTS, 0, numpoints);
@@ -106,11 +105,14 @@ void points::animate()
 	glBufferData(GL_ARRAY_BUFFER, numpoints * sizeof(glm::vec4), vertices, GL_DYNAMIC_DRAW);
 }
 
-bool points::setTexture(const char* textureFile)
+unsigned int points::setTexture(const char* textureFile)
 {
 	snowTexID = texture_loader::loadTexture(textureFile, 0);
 	if (snowTexID != 0)
-		return texture = true;
-	return texture = false;
+	{
+		texture = true;
+		return snowTexID;
+	}
+	texture = false;
+	return snowTexID;
 }
-

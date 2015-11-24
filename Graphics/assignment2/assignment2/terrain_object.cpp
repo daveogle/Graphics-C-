@@ -122,6 +122,7 @@ void terrain_object::drawObject(int drawmode)
 		GLuint location = sizeof(GLuint) * (i * zsize * 2);
 		glDrawElements(GL_TRIANGLE_STRIP, zsize * 2, GL_UNSIGNED_INT, (GLvoid*)(location));
 	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 /* Define the terrian heights */
@@ -347,11 +348,15 @@ void terrain_object::defineSea(GLfloat sealevel)
 	}
 }
 
-bool terrain_object::setTexture(const char* textureFile)
+unsigned int terrain_object::setTexture(const char* textureFile)
 {
 	texID = texture_loader::loadTexture(textureFile, 0);
 	if (texID != 0)
-		return texture = true;
-	return texture = false;
+	{
+		texture = true;
+		return texID;
+	}
+	texture = false;
+	return texID;
 }
 

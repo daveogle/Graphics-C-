@@ -14,7 +14,7 @@ public:
 	void draw();
 	void animate();
 	void updateParams(GLfloat dist, GLfloat sp);
-	bool setTexture(const char* textureFile);
+	unsigned int setTexture(const char* textureFile);
 
 	unsigned int snowTexID;
 	GLboolean texture;

@@ -17,7 +17,6 @@ unsigned int texture_loader::loadTexture(const char* textureFile, int texNumber)
 	unsigned int texID = 0;
 	try
 	{
-
 		glActiveTexture(GL_TEXTURE0 + texNumber);
 
 		/* load an image file directly as a new OpenGL texture */
@@ -29,7 +28,6 @@ unsigned int texture_loader::loadTexture(const char* textureFile, int texNumber)
 		{
 			printf("TexID SOIL loading error: '%s'\n", SOIL_last_result());
 		}
-
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

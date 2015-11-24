@@ -124,7 +124,7 @@ void object_ldr::createObject()
 
 	glGenBuffers(1, &vbo_mesh_textures);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_textures);
-	glBufferData(GL_ARRAY_BUFFER, textures.size() * sizeof(glm::vec3), &(textures[0]), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(glm::vec3), &(textureCoords[0]), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Generate a buffer for the indices
@@ -139,10 +139,9 @@ Could improve efficiency by moving the vertex attribute pointer functions to the
 create object but this method is more general 
 This code is almost untouched fomr the tutorial code except that I changed the
 number of elements per vertex from 4 to 3*/
-void object_ldr::drawObject()
+void object_ldr::drawObject(GLuint texID)
 {
 	int size;	// Used to get the byte size of the element (vertex index) array
-
 	// Describe our vertices array to OpenGL (it can't guess its format automatically)
 	glEnableVertexAttribArray(attribute_v_coord);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_vertices);
@@ -178,7 +177,7 @@ void object_ldr::drawObject()
 			0,                  // no extra data between each position
 			(void*)0            // offset of first element
 			);
-		glBindTexture(GL_TEXTURE_2D, textureId);
+		glBindTexture(GL_TEXTURE_2D, texID);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_mesh_elements); 
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -218,10 +217,14 @@ void object_ldr::smoothNormals()
 
 }
 
-bool object_ldr::setTexture(const char* textureFile, int textureNumber)
+unsigned int object_ldr::setTexture(const char* textureFile, int textureNumber)
 {
 	textureId = texture_loader::loadTexture(textureFile, textureNumber);
 	if (textureId != 0)
-		return texture = true;
-	return texture = false;
+	{
+		texture = true;
+		return textureId;
+	}
+	texture = false;
+	return textureId;
 }

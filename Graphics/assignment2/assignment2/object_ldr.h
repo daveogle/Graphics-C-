@@ -16,10 +16,10 @@ public:
 	~object_ldr();
 
 	void load_obj(const char* filename);
-	void drawObject();
+	void drawObject(GLuint texID);
 	void createObject();
 	void smoothNormals();
-	bool setTexture(const char* textureFile, int textureNumber);
+	unsigned int setTexture(const char* textureFile, int textureNumber);
 
 	std::vector<glm::vec4> vertices;
 	std::vector<glm::vec3> normals;
