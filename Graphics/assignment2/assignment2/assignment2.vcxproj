@@ -42,6 +42,10 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../../include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);../../lib</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../../include</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);../../lib</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -69,6 +73,8 @@
   <ItemGroup>
     <None Include="..\Shaders\a2.frag" />
     <None Include="..\Shaders\a2.vert" />
+    <None Include="..\Shaders\shadow.frag" />
+    <None Include="..\Shaders\shadow.vert" />
     <None Include="..\Shaders\snowflake.frag" />
     <None Include="..\Shaders\snowflake.vert" />
   </ItemGroup>

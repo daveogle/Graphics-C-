@@ -1,4 +1,4 @@
-// Minimal fragment shader
+// snowflake shader
 
 #version 420
 

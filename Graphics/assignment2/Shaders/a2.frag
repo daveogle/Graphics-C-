@@ -4,12 +4,15 @@
 
 #define MAX_LIGHTS 2 //arrays must have a constant value
 
+layout (binding = 0) uniform sampler2DShadow shadow_tex;
+
 in VS_OUT
 {
 	vec3 N;
 	vec3 L[MAX_LIGHTS];
 	vec3 V;
 	vec2 ftexcoord;
+	vec4 shadow_coord;
 } fs_in;
 
 uniform vec3 specular_colour, emissive, global_ambient, diffuse_colour;
@@ -26,7 +29,8 @@ vec4 getCalculateColour(vec3 Light)
 	float attenuation_k = 1.0f;
 	if(light_mode == 1)
 	{
-		attenuation = 1.0 / (attenuation_k * pow(distanceToLight, 2));
+		if(distanceToLight < 2.0) distanceToLight = 2.0;
+		attenuation = 2.0 / (attenuation_k * pow(distanceToLight, 2));
 	}
 
 	vec3 N = normalize(fs_in.N);
@@ -53,5 +57,6 @@ void main()
 	{
 		combinedLighting += getCalculateColour(fs_in.L[i]);
 	}
+	vec4 shadow = textureProj(shadow_tex, fs_in.shadow_coord) * vec4(1.0);
 	outputColor = combinedLighting * texcolour;
 }

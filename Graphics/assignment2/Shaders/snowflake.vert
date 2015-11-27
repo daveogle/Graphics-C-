@@ -1,4 +1,4 @@
-// Minimal vertex shader
+// snowflake shader
 
 #version 400
 

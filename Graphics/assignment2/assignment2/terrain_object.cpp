@@ -174,6 +174,8 @@ void terrain_object::calculateNoise()
    */
 void terrain_object::createTerrain(GLuint xp, GLuint zp, GLfloat xs, GLfloat zs)
 {
+	std::cout << "creating terrain..." << std::endl;
+
 	xsize = xp;
 	zsize = zp;
 	width = xs;
@@ -263,6 +265,7 @@ void terrain_object::createTerrain(GLuint xp, GLuint zp, GLfloat xs, GLfloat zs)
 
 	// Calculate the normals by averaging cross products for all triangles 
 	calculateNormals();
+	std::cout << "Terrain generated" << std::endl;
 }
 
 /* Calculate normals by using cross products along the triangle strips

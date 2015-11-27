@@ -1,4 +1,5 @@
 #include "texture_loader.h"
+#include <iostream>
 
 
 texture_loader::texture_loader()
@@ -40,5 +41,6 @@ unsigned int texture_loader::loadTexture(const char* textureFile, int texNumber)
 		printf("\nImage file loading failed.");
 		return 0;
 	}
+	std::cout << "Texture " << textureFile << " loaded\n" << std::endl;
 	return texID;
 }

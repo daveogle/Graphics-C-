@@ -194,7 +194,7 @@ GLuint wrapper_glfw::LoadShader(const char *vertex_path, const char *fragment_pa
 	vertShader = BuildShader(GL_VERTEX_SHADER, vertShaderStr);
 	fragShader = BuildShader(GL_FRAGMENT_SHADER, fragShaderStr);
 
-	std::cout << "Linking program" << std::endl;
+	std::cout << "Linking programs " << vertex_path << " & " << fragment_path << std::endl;
 	GLuint program = glCreateProgram();
 	glAttachShader(program, vertShader);
 	glAttachShader(program, fragShader);

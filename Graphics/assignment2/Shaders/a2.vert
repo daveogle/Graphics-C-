@@ -7,10 +7,10 @@
 // These are the vertex attributes
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec3 texcoord;
+layout(location = 2) in vec2 texcoord;
 
 // Uniform variables are passed in from the application
-uniform mat4 model_view, projection;
+uniform mat4 model_view, projection, shadow;
 uniform mat3 normal_matrix;
 uniform vec3 light_pos[MAX_LIGHTS];
 uniform uint numberOfLights, texture_mode;
@@ -22,6 +22,7 @@ out VS_OUT
 	vec3 L[MAX_LIGHTS];
 	vec3 V;
 	vec2 ftexcoord;
+	vec4 shadow_coord;
 } vs_out;
 
 
@@ -43,4 +44,5 @@ void main()
 	}
 
 	gl_Position = projection * P;
+	vs_out.shadow_coord = shadow * position;
 }

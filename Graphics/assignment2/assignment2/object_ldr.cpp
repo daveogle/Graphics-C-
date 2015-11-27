@@ -104,7 +104,7 @@ void object_ldr::load_obj(const char* filename) {
 			}
 		}
 	}
-	std::cout << "File " << filename << "loaded\n" << endl;
+	std::cout << "File " << filename << " loaded\n" << endl;
 }
 
 /* Copy the vertices, normals and element indices into vertex buffers */

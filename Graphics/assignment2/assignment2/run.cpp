@@ -16,6 +16,9 @@ also includes the OpenGL extension initialisation*/
 #include <iostream>
 #include <stack>
 
+#define DEPTH_TEXTURE_SIZE      4096
+
+GLboolean lightPass;
 GLfloat zoom;
 GLfloat angle_x;
 GLfloat angle_x_inc;
@@ -29,13 +32,17 @@ GLfloat scale_z_value;
 GLfloat x_tanslate;
 GLfloat y_tanslate;
 GLfloat z_tanslate;
+GLuint shaders[3];
+
+glm::mat4 shadow_matrix, scale_bias_matrix;
 
 /* Include GLM core and matrix extensions*/
 int drawmode = 0;									//points vs fill
 GLfloat width, height;								/*window width & height*/
-glm::mat4 projection; 
-GLuint light_mode, numberOfLights, texture_mode;
-GLuint mainShader, snowShader, vao;					/*shaders & vertex array object*/
+glm::mat4 projection;
+glm::mat4 view[2];//camera / light
+GLuint light_mode, numberOfLights, texture_mode, shadow_texture;
+GLuint shadow_buffer, vao;					/*shaders & vertex array object*/
 GLfloat aspect_ratio;								/* Aspect ratio of the window defined in the reshape callback*/
 GLfloat fixedLight_x, fixedLight_y, fixedLight_z;	//fixed light position
 glm::vec3 lightPosition, global_ambient;
@@ -43,9 +50,10 @@ glm::vec3 lightPosition, global_ambient;
 //uniform IDs
 GLuint projectionID, snowProjectionID, modelViewID, snowModelID, snowViewID, normal_matrixID, shininessID, 
 	   ambientID, specularID, diffuseID, light_posID, emisiveID,
-	   global_ambientID, lightModeID, numberOfLightsID, textureModeID;
+	   global_ambientID, lightModeID, numberOfLightsID, textureModeID,
+	   shadowProjectionID, shadowModelViewID, shadow_matrixID;
 
-GLuint snowTexOne, snowTexTwo, coalTex;
+GLuint snowTexOne, snowTexTwo, coalTex, carrotTex, lampostTex;
 
 std::stack<glm::mat4>model;
 
@@ -54,7 +62,9 @@ transformation *snowballOne;
 transformation *snowballTwo;
 transformation *eyeOne;
 transformation *eyeTwo;
+transformation *carrot;
 lighting *coal;
+lighting *carrotLight;
 
 //Terrain globals
 terrain_object *heightfield;
@@ -66,14 +76,43 @@ lighting *terrainLight;
 //Snow
 points *snowFlakes;
 
-//light bulbs
+//objects
 object_ldr sphere;
+object_ldr cone;
+object_ldr lampost;
+
+//light bulbs
 lighting *bulbLight;
 transformation *bulbOne;
 transformation *bulbTwo;
+transformation *bulbThree;
+
+//lamppost
+lighting *lampostLight;
+transformation *lampostModel;
 
 void init(wrapper_glfw *glw)
 {
+	//load shaders
+	try
+	{
+		std::cout << "loading shaders..." << std::endl;
+		shaders[0] = glw->LoadShader("../Shaders/a2.vert", "../Shaders/a2.frag");
+		shaders[1] = glw->LoadShader("../Shaders/shadow.vert", "../Shaders/shadow.frag");
+		shaders[2] = glw->LoadShader("../Shaders/snowflake.vert", "../Shaders/snowflake.frag");
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "Caught exception: " << e.what() << std::endl;
+		std::cin.ignore();
+		exit(0);
+	}
+
+	//load files
+	sphere.load_obj("../Objects/sphere.obj");
+	cone.load_obj("../Objects/cone1.obj");
+	lampost.load_obj("../Objects/lampost.obj");
+
 	zoom = 10;
 	angle_x = 0.0;
 	angle_x_inc = 0.0;
@@ -101,7 +140,7 @@ void init(wrapper_glfw *glw)
 	heightfield->createTerrain(200, 200, land_size, land_size);
 	//set texture
 	snowTexOne = heightfield->setTexture("../Textures/packed_snow.png");
-	int loc = glGetUniformLocation(mainShader, "tex1");
+	int loc = glGetUniformLocation(shaders[0], "tex1");
 	if (loc >= 0) glUniform1i(loc, 0); 
 	heightfield->createObject();
 	//terrain lighting
@@ -112,16 +151,25 @@ void init(wrapper_glfw *glw)
 	//create new snowflake object
 	snowFlakes = new points(2000, -1.5, 0.01);
 	snowFlakes->setTexture("../Textures/snowflake2.png");
-	int snowLec = glGetUniformLocation(snowShader, "snowTex");
+	int snowLec = glGetUniformLocation(shaders[2], "snowTex");
 	if (snowLec >= 0) glUniform1i(snowLec, 0);
 	snowFlakes->create();
 	
 	//load sphere from .obj file
-	sphere.load_obj("../Objects/sphere.obj");
 	sphere.smoothNormals();
 	snowTexTwo = sphere.setTexture("../Textures/icy_snow.png", 0);
 	coalTex = sphere.setTexture("../Textures/coal.png", 0);
 	sphere.createObject();
+
+	//load cone
+	cone.smoothNormals();
+	carrotTex = cone.setTexture("../Textures/carrot.png", 0);
+	cone.createObject();
+
+	//load lampost
+	lampost.smoothNormals();
+	lampostTex = lampost.setTexture("../Textures/metal.png", 0);
+	lampost.createObject();
 
 	/*Snowman*/
 	snowballOne = new transformation();
@@ -138,22 +186,51 @@ void init(wrapper_glfw *glw)
 	coal->setSpecular(0.01, 0.01, 0.01);
 	eyeOne = new transformation();
 	eyeOne->scaleUniform(-0.98);
-	eyeOne->translate(-0.20, 'z');
+	eyeOne->translate(-0.17, 'z');
 	eyeOne->translate(1.0, 'y');
+	eyeOne->translate(0.05, 'x');
+	eyeTwo = new transformation();
+	eyeTwo->scaleUniform(-0.98);
+	eyeTwo->translate(-0.17, 'z');
+	eyeTwo->translate(1.0, 'y');
+	eyeTwo->translate(-0.05, 'x');
+	//nose
+	carrotLight = new lighting(20.0, 0.2);
+	carrotLight->setDiffuse(1.0, 0.5490196078431373, 0.0);
+	carrot = new transformation();
+	carrot->scaleUniform(-0.96);
+	carrot->translate(0.95, 'y');
+	carrot->translate(-0.25, 'z');
+	carrot->scale(0.06, 'y');
+	carrot->rotate(90.0, 'x');
+
+	//lamppost
+	lampostModel = new transformation();
+	lampostModel->translate(1.0, 'x');
+	lampostModel->translate(1.5, 'y');
+	lampostLight = new lighting(20.0, 2.0);
+	lampostLight->setDiffuse(0.8, 0.8, 0.8);
 
 	//create bulbs
 	bulbOne = new transformation();
 	bulbTwo = new transformation();
+	bulbThree = new transformation();
 	bulbLight = new lighting(0.001f, 0.0f);
 	bulbLight->setDiffuse(0.4, 0.4, 0.0);
 	bulbLight->emitLight(true);
 	bulbLight->setEmisive(0.4, 0.4, 0.0);
-	bulbOne->scaleUniform(-0.9);
-	bulbOne->translate(1.0, 'y');
-	bulbOne->translate(-1.0, 'x');
-	bulbTwo->scaleUniform(-0.9);
-	bulbTwo->translate(1.0, 'y');
-	bulbTwo->translate(1.0, 'x');
+	bulbOne->scaleUniform(-0.865);
+	bulbOne->translate(0.68, 'x');
+	bulbOne->translate(2.66, 'y');
+	bulbOne->translate(-0.28, 'z');
+	bulbTwo->scaleUniform(-0.865);
+	bulbTwo->translate(1.33, 'x');
+	bulbTwo->translate(2.66, 'y');
+	bulbTwo->translate(-0.28, 'z');
+	bulbThree->scaleUniform(-0.865);
+	bulbThree->translate(1.00, 'x');
+	bulbThree->translate(2.66, 'y');
+	bulbThree->translate(0.28, 'z');
 
 	//set aspect ratio
 	aspect_ratio = width / height;
@@ -162,9 +239,10 @@ void init(wrapper_glfw *glw)
 	fixedLight_x = 0.0f;
 	fixedLight_y = 100.0;
 	fixedLight_z = 100.0;
-	global_ambient = glm::vec3(0.05);
+	lightPosition = glm::vec3(fixedLight_x, fixedLight_y, fixedLight_z);
+	global_ambient = glm::vec3(0.02);
 	numberOfLights = 1;
-	light_mode = 0;
+	light_mode = 1;
 
 	//print graphics card details
 	GLint maxTextures;
@@ -196,22 +274,9 @@ void init(wrapper_glfw *glw)
 	std::cout << "Key down = move view down" << '\n';
 	std::cout << "Key left = move view left" << '\n';
 	std::cout << "Key right = move view right" << '\n';
-	std::cout << "Key M = change light mode" << '\n';
+	std::cout << "Key M = Night Time / Day Time" << '\n';
 	std::cout << "Key T = change texture mode" << '\n';
 	std::cout << std::endl;
-
-	//load shaders
-	try
-	{
-		mainShader = glw->LoadShader("../Shaders/a2.vert", "../Shaders/a2.frag");
-		snowShader = glw->LoadShader("../Shaders/snowflake.vert", "../Shaders/snowflake.frag");
-	}
-	catch (std::exception &e)
-	{
-		std::cout << "Caught exception: " << e.what() << std::endl;
-		std::cin.ignore();
-		exit(0);
-	}
 
 	// Generate index (name) for one vertex array object
 	glGenVertexArrays(1, &vao);
@@ -219,47 +284,111 @@ void init(wrapper_glfw *glw)
 	// Create the vertex array object and make it current
 	glBindVertexArray(vao);
 
+	//generate a framebuffer object with only depth attachment //from openGL superbible sixth edition pg.536
+	glGenFramebuffers(1, &shadow_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
+
+	glGenTextures(1, &shadow_texture);
+	glBindTexture(GL_TEXTURE_2D, shadow_texture);
+	glTexStorage2D(GL_TEXTURE_2D, 11, GL_DEPTH_COMPONENT32F, DEPTH_TEXTURE_SIZE, DEPTH_TEXTURE_SIZE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//turn on texture comparison
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	//specify function to use
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	//bind texture to buffer
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadow_texture, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	shadow_matrix = glm::mat4(1.0f);
+	//set scale-bias matrix
+	scale_bias_matrix = glm::mat4(glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
+		glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+
 	//Uniform locations Main
-	projectionID = glGetUniformLocation(mainShader, "projection");
-	modelViewID = glGetUniformLocation(mainShader, "model_view");
-	shininessID = glGetUniformLocation(mainShader, "shininess");
-	ambientID = glGetUniformLocation(mainShader, "ambient");
-	specularID = glGetUniformLocation(mainShader, "specular_colour");
-	diffuseID = glGetUniformLocation(mainShader, "diffuse_colour");
-	light_posID = glGetUniformLocation(mainShader, "light_pos");
-	normal_matrixID = glGetUniformLocation(mainShader, "normal_matrix");
-	emisiveID = glGetUniformLocation(mainShader, "emissive");
-	global_ambientID = glGetUniformLocation(mainShader, "global_ambient");
-	lightModeID = glGetUniformLocation(mainShader, "light_mode");
-	textureModeID = glGetUniformLocation(mainShader, "texture_mode");
-	numberOfLightsID = glGetUniformLocation(mainShader, "numberOfLights");
+	projectionID = glGetUniformLocation(shaders[0], "projection");
+	modelViewID = glGetUniformLocation(shaders[0], "model_view");
+	shininessID = glGetUniformLocation(shaders[0], "shininess");
+	ambientID = glGetUniformLocation(shaders[0], "ambient");
+	specularID = glGetUniformLocation(shaders[0], "specular_colour");
+	diffuseID = glGetUniformLocation(shaders[0], "diffuse_colour");
+	light_posID = glGetUniformLocation(shaders[0], "light_pos");
+	normal_matrixID = glGetUniformLocation(shaders[0], "normal_matrix");
+	emisiveID = glGetUniformLocation(shaders[0], "emissive");
+	global_ambientID = glGetUniformLocation(shaders[0], "global_ambient");
+	lightModeID = glGetUniformLocation(shaders[0], "light_mode");
+	textureModeID = glGetUniformLocation(shaders[0], "texture_mode");
+	numberOfLightsID = glGetUniformLocation(shaders[0], "numberOfLights");
+	shadow_matrixID = glGetUniformLocation(shaders[0], "shadow");
 
 	//Uniform locations Snow
-	snowModelID = glGetUniformLocation(snowShader, "model");
-	snowViewID = glGetUniformLocation(snowShader, "view");
-	snowProjectionID = glGetUniformLocation(snowShader, "projection");
+	snowModelID = glGetUniformLocation(shaders[2], "model");
+	snowViewID = glGetUniformLocation(shaders[2], "view");
+	snowProjectionID = glGetUniformLocation(shaders[2], "projection");
+
+	//Uniform locations Shadow
+	shadowProjectionID = glGetUniformLocation(shaders[1], "projection");
+	shadowModelViewID = glGetUniformLocation(shaders[1], "model_view");
 }
 
 /*
 * Function to set uniform values
 */
-void setUniforms(glm::mat4 view, glm::mat4 model, lighting* light)
+void setUniforms(glm::mat4 model, lighting* light)
 {
-	glm::mat4 model_view = view * model;
-	glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+	glm::mat4 model_view = view[lightPass] * model;
 	glUniformMatrix4fv(modelViewID, 1, GL_FALSE, &model_view[0][0]);
-	glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
-	glUniform1f(ambientID, light->getAmbient());
-	glUniform1f(shininessID, light->getShininess());
-	glUniform3fv(diffuseID, 1, &light->getDiffuse()[0]);
-	glUniform3fv(specularID, 1, &light->getSpecular()[0]);
-	glUniform3fv(emisiveID, 1, &light->getEmisive()[0]);
+	if (!lightPass)
+	{
+		//setup shadow matrix
+		shadow_matrix = scale_bias_matrix * projection * model * view[1];
+		glUniformMatrix4fv(shadow_matrixID, 1, GL_FALSE, &shadow_matrix[0][0]);
+		glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_view)));
+		glUniformMatrix3fv(normal_matrixID, 1, GL_FALSE, &normal_matrix[0][0]);
+		glUniform1f(ambientID, light->getAmbient());
+		glUniform1f(shininessID, light->getShininess());
+		glUniform3fv(diffuseID, 1, &light->getDiffuse()[0]);
+		glUniform3fv(specularID, 1, &light->getSpecular()[0]);
+		glUniform3fv(emisiveID, 1, &light->getEmisive()[0]);
+	}
+}
+
+void drawScene()
+{
+	setUniforms(model.top() * eyeOne->getModel(), coal);
+	sphere.drawObject(coalTex);
+
+	setUniforms(model.top() * eyeTwo->getModel(), coal);
+	sphere.drawObject(coalTex);
+
+	setUniforms(model.top() * carrot->getModel(), carrotLight);
+	cone.drawObject(carrotTex);
+
+	setUniforms(model.top() * snowballOne->getModel(), terrainLight);
+	sphere.drawObject(snowTexTwo);
+
+	setUniforms(model.top() * snowballTwo->getModel(), terrainLight);
+	sphere.drawObject(snowTexTwo);
+
+	setUniforms(model.top() * lampostModel->getModel(), lampostLight);
+	lampost.drawObject(lampostTex);
+
+	setUniforms(model.top(), terrainLight);
+	heightfield->drawObject(drawmode);
+
+	model.pop();
 }
 
 void display()
 {
+	transformation* lights[3] = { bulbOne, bulbTwo, bulbThree };
+	glm::vec3 lightPosition_p;
+	GLfloat lightsPositions[3 * 3];//number of lights * xyz
 	//array holding light bulbs
-	transformation* lights[2] = { bulbOne, bulbTwo };
 
 	/* Define the background colour */
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -270,90 +399,98 @@ void display()
 	/* Enable depth test  */
 	glEnable(GL_DEPTH_TEST);
 
-	/* Make the main shader program current */
-	glUseProgram(mainShader);
-
-	glUniform3fv(global_ambientID, 1, &global_ambient[0]);
-	glUniform1ui(textureModeID, 0);
+	//both shaders
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	projection = glm::perspective(30.0f, aspect_ratio, 0.1f, 100.0f);
 	glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
-	glm::mat4 view = glm::lookAt(
-		glm::vec3(0, 0, zoom), // Camera is at (0,0,4), in World Space
-		glm::vec3(0, 0, 0), // and looks at the origin
-		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-		);
-
 	model.push(glm::mat4(1.0));
-
 	model.top() = glm::translate(model.top(), glm::vec3(x_tanslate, y_tanslate, z_tanslate));
 	model.top() = glm::scale(model.top(), glm::vec3(scale_x_value, scale_y_value, scale_z_value));
 	model.top() = glm::rotate(model.top(), angle_x, glm::vec3(1, 0, 0));
 	model.top() = glm::rotate(model.top(), angle_y, glm::vec3(0, 1, 0));
 	model.top() = glm::rotate(model.top(), angle_z, glm::vec3(0, 0, 1));
+	/* Make the right shader program current */
 
-	//set number of lights
-	glm::vec3 lightPosition_p;
-	GLfloat lightsPositions[2 * 3];//number of lights * xyz
-	for (int i = 0; i < numberOfLights; i++)
+	glUseProgram(shaders[lightPass]);
+	if (lightPass)
 	{
-		int step = i * 3;
-		if (light_mode)
-		{
-			numberOfLights = 2;
-			glUniform1ui(numberOfLightsID, numberOfLights);
-			glm::mat4 lightModel = model.top() * lights[i]->getModel();
-			setUniforms(view, lightModel, bulbLight);
-			sphere.drawObject(0);
-			glm::vec4 lightPosition_h = view * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
-			lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
-			lightsPositions[step] = lightPosition_p.x;
-			lightsPositions[step + 1] = lightPosition_p.y;
-			lightsPositions[step + 2] = lightPosition_p.z;
-			glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
-		}
-		else
-		{
-			numberOfLights = 1;
-			glUniform1ui(numberOfLightsID, numberOfLights);
-			lightPosition = glm::vec3(fixedLight_x, fixedLight_y, fixedLight_z);
-			lightsPositions[step] = lightPosition.x;
-			lightsPositions[step + 1] = lightPosition.y;
-			lightsPositions[step + 2] = lightPosition.z;
-			glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
-		}
+		glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
+		glBindTexture(GL_TEXTURE_2D, shadow_texture);
+		//if lightmode = 1
+		view[lightPass] = glm::lookAt(
+			glm::vec3(lightsPositions[0], lightsPositions[1], lightsPositions[2]), // Camera is at light source, in World Space
+			glm::vec3(0, 0, 0), // and looks at the origin
+			glm::vec3(0, 1, 0)
+			);
 	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		//set camera view
+		view[lightPass] = glm::lookAt(
+			glm::vec3(0, 0, zoom), // Camera is at (0,0,4), in World Space
+			glm::vec3(0, 0, 0), // and looks at the origin
+			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+			);
+		//glBindVertexArray(0);
+		//render the snow	
+		/* Enable Blending for the analytic point sprite */
+		glUseProgram(shaders[2]);
+		glEnable(GL_BLEND);
+		glm::mat4 flakeModel = glm::translate(model.top(), glm::vec3(0.0, 2.0, 0.0));
+		glUniformMatrix4fv(snowModelID, 1, GL_FALSE, &flakeModel[0][0]);
+		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+		glUniformMatrix4fv(snowViewID, 1, GL_FALSE, &view[lightPass][0][0]);
+		glUniformMatrix4fv(snowProjectionID, 1, GL_FALSE, &projection[0][0]);
 
-	glUniform1ui(lightModeID, light_mode);
-	glUniform1ui(textureModeID, texture_mode); //set Texture mode
+		snowFlakes->draw();
+		snowFlakes->animate();
 
-	setUniforms(view, model.top() * eyeOne->getModel(), coal);
-	sphere.drawObject(coalTex);
+		glUseProgram(shaders[lightPass]);
 
-	setUniforms(view, model.top() * snowballOne->getModel(), terrainLight);
-	sphere.drawObject(snowTexTwo);
+		glUniform3fv(global_ambientID, 1, &global_ambient[0]);
+		glUniform1ui(textureModeID, 0);
+		glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 
-	setUniforms(view, model.top() * snowballTwo->getModel(), terrainLight);
-	sphere.drawObject(snowTexTwo);
+		//set number of lights
+		for (int i = 0; i < numberOfLights; i++)
+		{
+			int step = i * 3;
+			if (light_mode)
+			{
+				numberOfLights = 3;
+				glUniform1ui(numberOfLightsID, numberOfLights);
+				glm::mat4 lightModel = model.top() * lights[i]->getModel();
+				setUniforms(lightModel, bulbLight);
+				sphere.drawObject(0);
+				glm::vec4 lightPosition_h = view[lightPass] * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
+				lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
+				lightsPositions[step] = lightPosition_p.x;
+				lightsPositions[step + 1] = lightPosition_p.y;
+				lightsPositions[step + 2] = lightPosition_p.z;
+				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+			}
+			else
+			{
+				numberOfLights = 1;
+				glUniform1ui(numberOfLightsID, numberOfLights);
+				lightsPositions[step] = lightPosition.x;
+				lightsPositions[step + 1] = lightPosition.y;
+				lightsPositions[step + 2] = lightPosition.z;
+				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+			}
+		}
 
-	setUniforms(view, model.top(), terrainLight);
-	heightfield->drawObject(drawmode);
+		glUniform1ui(lightModeID, light_mode);
 
-	//render the snow	
-	/* Enable Blending for the analytic point sprite */
-	glUseProgram(snowShader);
-	glEnable(GL_BLEND);
-	model.top() = glm::translate(model.top(), glm::vec3(0.0, 2.0, 0.0));
-	glUniformMatrix4fv(snowModelID, 1, GL_FALSE, &model.top()[0][0]);
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-	glUniformMatrix4fv(snowViewID, 1, GL_FALSE, &view[0][0]);
-	glUniformMatrix4fv(snowProjectionID, 1, GL_FALSE, &projection[0][0]);
+		glUniform1ui(textureModeID, texture_mode); //set Texture mode
+	}
+	//both shaders
 
-	snowFlakes->draw();
-	snowFlakes->animate();
-
-	model.pop();
+	//lightProjection = glm::perspective(30.0f, aspect_ratio, 0.1f, 100.0f);
+	drawScene();
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
@@ -374,19 +511,19 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
-	if (key == '1') bulbOne->translate(-0.05, 'x');
-	if (key == '2') bulbOne->translate(0.05, 'x');
-	if (key == '3') bulbOne->translate(-0.05, 'y');
-	if (key == '4') bulbOne->translate(0.05, 'y');
-	if (key == '5') bulbOne->translate(-0.05, 'z');
-	if (key == '6') bulbOne->translate(0.05, 'z');
+	if (key == '1') bulbOne->translate(-0.02, 'x');
+	if (key == '2') bulbOne->translate(0.02, 'x');
+	if (key == '3') bulbOne->translate(-0.02, 'y');
+	if (key == '4') bulbOne->translate(0.02, 'y');
+	if (key == '5') bulbOne->translate(-0.02, 'z');
+	if (key == '6') bulbOne->translate(0.02, 'z');
 
-	if (key == 'D') bulbTwo->translate(-0.05, 'x');
-	if (key == 'A') bulbTwo->translate(0.05, 'x');
-	if (key == 'R') bulbTwo->translate(-0.05, 'y');
-	if (key == 'E') bulbTwo->translate(0.05, 'y');
-	if (key == 'S') bulbTwo->translate(-0.05, 'z');
-	if (key == 'W') bulbTwo->translate(0.05, 'z');
+	if (key == 'D') bulbThree->translate(-0.02, 'x');
+	if (key == 'A') bulbThree->translate(0.02, 'x');
+	if (key == 'R') bulbThree->translate(-0.02, 'y');
+	if (key == 'E') bulbThree->translate(0.02, 'y');
+	if (key == 'S') bulbThree->translate(-0.02, 'z');
+	if (key == 'W') bulbThree->translate(0.02, 'z');
 
 	if (key == GLFW_KEY_UP)
 	{
@@ -409,10 +546,12 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 
 	if (action == GLFW_PRESS)
 	{
+		//std::cout << "bulb 1 xyz = " << bulbOne->getCoords().x << "," << bulbOne->getCoords().y << "," << bulbOne->getCoords().z << std::endl;
+		//std::cout << "bulb 2 xyz = " << bulbTwo->getCoords().x << "," << bulbTwo->getCoords().y << "," << bulbTwo->getCoords().z << std::endl;
 		if (key == 'M')
 		{
 			light_mode = !light_mode;
-			std::cout << "lightmode changed: " << light_mode << std::endl;
+			std::cout << "lightmode changed: " << std::endl;
 		}
 		if (key == 'T')
 		{
@@ -446,7 +585,7 @@ void getDesktopResolution(GLfloat& horizontal, GLfloat& vertical)
 int main(int argc, char* argv[])
 {
 	getDesktopResolution(width, height);
-	char* message = "Dave Ogle - Assignment 2 - Not The Tank";
+	char* message = "Dave Ogle - Assignment 2 - Snowy Scene";
 	wrapper_glfw *glw = new wrapper_glfw(width, height, message);
 
 	if (!ogl_LoadFunctions())
