@@ -70,6 +70,7 @@ void points::draw()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, snowTexID);
 	/* Draw our points*/
 	glDrawArrays(GL_POINTS, 0, numpoints);

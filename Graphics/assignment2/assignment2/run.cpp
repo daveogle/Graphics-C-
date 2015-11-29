@@ -1,7 +1,7 @@
 /*Modified from example code on blackboard*/
 /* Link to static libraries*/
 #pragma comment(lib, "glfw3.lib")
-#pragma comment(lib, "glloadD.lib")
+#pragma comment(lib, "glload.lib")
 #pragma comment(lib, "opengl32.lib")
 
 /* Include the header to the GLFW wrapper class which
@@ -16,9 +16,8 @@ also includes the OpenGL extension initialisation*/
 #include <iostream>
 #include <stack>
 
-#define DEPTH_TEXTURE_SIZE      4096
-
 GLboolean lightPass;
+GLboolean shadows;
 GLfloat zoom;
 GLfloat angle_x;
 GLfloat angle_x_inc;
@@ -51,9 +50,9 @@ glm::vec3 lightPosition, global_ambient;
 GLuint projectionID, snowProjectionID, modelViewID, snowModelID, snowViewID, normal_matrixID, shininessID, 
 	   ambientID, specularID, diffuseID, light_posID, emisiveID,
 	   global_ambientID, lightModeID, numberOfLightsID, textureModeID,
-	   shadowProjectionID, shadowModelViewID, shadow_matrixID;
+	   shadowProjectionID, shadowModelViewID, shadow_matrixID, shadowModeID;
 
-GLuint snowTexOne, snowTexTwo, coalTex, carrotTex, lampostTex;
+GLuint snowTexOne, snowTexTwo, coalTex, carrotTex, lampostTex, bulbTex;
 
 std::stack<glm::mat4>model;
 
@@ -110,9 +109,10 @@ void init(wrapper_glfw *glw)
 
 	//load files
 	sphere.load_obj("../Objects/sphere.obj");
-	cone.load_obj("../Objects/cone1.obj");
+	cone.load_obj("../Objects/cone.obj");
 	lampost.load_obj("../Objects/lampost.obj");
 
+	//global transformation values
 	zoom = 10;
 	angle_x = 0.0;
 	angle_x_inc = 0.0;
@@ -129,7 +129,6 @@ void init(wrapper_glfw *glw)
 
 	//enable blending
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	texture_mode = 1;
 
 	/* Create the heightfield object */
 	octaves = 8;
@@ -155,23 +154,24 @@ void init(wrapper_glfw *glw)
 	if (snowLec >= 0) glUniform1i(snowLec, 0);
 	snowFlakes->create();
 	
-	//load sphere from .obj file
+	//setup sphere 
 	sphere.smoothNormals();
 	snowTexTwo = sphere.setTexture("../Textures/icy_snow.png", 0);
 	coalTex = sphere.setTexture("../Textures/coal.png", 0);
+	bulbTex = sphere.setTexture("../Textures/frosted_glass.png", 0);
 	sphere.createObject();
 
-	//load cone
+	//setup cone 
 	cone.smoothNormals();
 	carrotTex = cone.setTexture("../Textures/carrot.png", 0);
 	cone.createObject();
 
-	//load lampost
+	//setup lampost
 	lampost.smoothNormals();
 	lampostTex = lampost.setTexture("../Textures/metal.png", 0);
 	lampost.createObject();
 
-	/*Snowman*/
+	/*Snowman transformations & lighting*/
 	snowballOne = new transformation();
 	snowballOne->scaleUniform(-0.6);
 	snowballOne->translate(0.4, 'y');
@@ -208,14 +208,14 @@ void init(wrapper_glfw *glw)
 	lampostModel = new transformation();
 	lampostModel->translate(1.0, 'x');
 	lampostModel->translate(1.5, 'y');
-	lampostLight = new lighting(20.0, 2.0);
-	lampostLight->setDiffuse(0.8, 0.8, 0.8);
+	lampostLight = new lighting(70.0, 1.0);
+	lampostLight->setDiffuse(0.3, 0.8, 0.0);
 
 	//create bulbs
 	bulbOne = new transformation();
 	bulbTwo = new transformation();
 	bulbThree = new transformation();
-	bulbLight = new lighting(0.001f, 0.0f);
+	bulbLight = new lighting(90.0f, 0.2f);
 	bulbLight->setDiffuse(0.4, 0.4, 0.0);
 	bulbLight->emitLight(true);
 	bulbLight->setEmisive(0.4, 0.4, 0.0);
@@ -242,7 +242,12 @@ void init(wrapper_glfw *glw)
 	lightPosition = glm::vec3(fixedLight_x, fixedLight_y, fixedLight_z);
 	global_ambient = glm::vec3(0.02);
 	numberOfLights = 1;
-	light_mode = 1;
+	light_mode = 1; //light mode = in scene
+	texture_mode = 1; //texture enabled
+	
+	//shadow flags
+	lightPass = false;
+	shadows = false;
 
 	//print graphics card details
 	GLint maxTextures;
@@ -258,24 +263,16 @@ void init(wrapper_glfw *glw)
 	std::cout << '\n';
 
 	//print key press instructions
-	std::cout << "Key 1 = move lamp1 left" << '\n';
-	std::cout << "Key 2 = move lamp1 right" << '\n';
-	std::cout << "Key 3 = move lamp1 down" << '\n';
-	std::cout << "Key 4 = move lamp1 up" << '\n';
-	std::cout << "Key 5 = move lamp1 forward" << '\n';
-	std::cout << "Key 6 = move lamp1 back" << '\n';
-	std::cout << "Key A = move lamp2 left" << '\n';
-	std::cout << "Key D = move lamp2 right" << '\n';
-	std::cout << "Key S = move lamp2 down" << '\n';
-	std::cout << "Key W = move lamp2 up" << '\n';
-	std::cout << "Key E = move lamp2 forward" << '\n';
-	std::cout << "Key R = move lamp2 back" << '\n';
+	std::cout << "Key S = Shadows" << '\n';
 	std::cout << "Key up = move view up" << '\n';
 	std::cout << "Key down = move view down" << '\n';
 	std::cout << "Key left = move view left" << '\n';
 	std::cout << "Key right = move view right" << '\n';
+	std::cout << "Key - = move view out" << '\n';
+	std::cout << "Key + = move view in" << '\n';
 	std::cout << "Key M = Night Time / Day Time" << '\n';
 	std::cout << "Key T = change texture mode" << '\n';
+	std::cout << "Key Z = change draw mode" << '\n';
 	std::cout << std::endl;
 
 	// Generate index (name) for one vertex array object
@@ -289,17 +286,26 @@ void init(wrapper_glfw *glw)
 	glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
 
 	glGenTextures(1, &shadow_texture);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, shadow_texture);
-	glTexStorage2D(GL_TEXTURE_2D, 11, GL_DEPTH_COMPONENT32F, DEPTH_TEXTURE_SIZE, DEPTH_TEXTURE_SIZE);
+	glTexImage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//turn on texture comparison
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	//specify function to use
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	//bind texture to buffer
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadow_texture, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_texture, 1);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	int loc2 = glGetUniformLocation(shaders[0], "shadow_tex");
+	if (loc2 >= 0) glUniform1i(loc2, 1);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glActiveTexture(GL_TEXTURE0);
 
 	shadow_matrix = glm::mat4(1.0f);
 	//set scale-bias matrix
@@ -324,6 +330,7 @@ void init(wrapper_glfw *glw)
 	textureModeID = glGetUniformLocation(shaders[0], "texture_mode");
 	numberOfLightsID = glGetUniformLocation(shaders[0], "numberOfLights");
 	shadow_matrixID = glGetUniformLocation(shaders[0], "shadow");
+	shadowModeID = glGetUniformLocation(shaders[0], "shadow_mode");
 
 	//Uniform locations Snow
 	snowModelID = glGetUniformLocation(shaders[2], "model");
@@ -357,8 +364,48 @@ void setUniforms(glm::mat4 model, lighting* light)
 	}
 }
 
+//Function to draw the scene
 void drawScene()
 {
+	transformation* lights[3] = { bulbOne, bulbTwo, bulbThree };
+	glm::vec3 lightPosition_p;
+	GLfloat lightsPositions[3 * 3];//number of lights * xyz
+
+	for (int i = 0; i < numberOfLights; i++)
+	{
+		int step = i * 3;
+		if (light_mode)
+		{
+			numberOfLights = 3;
+			if (!lightPass)	glUniform1ui(numberOfLightsID, numberOfLights);
+			glm::mat4 lightModel = model.top() * lights[i]->getModel();
+			setUniforms(lightModel, bulbLight);
+			sphere.drawObject(bulbTex);
+			
+			if (!lightPass)
+			{
+				glm::vec4 lightPosition_h = view[lightPass] * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
+				lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
+				lightsPositions[step] = lightPosition_p.x;
+				lightsPositions[step + 1] = lightPosition_p.y;
+				lightsPositions[step + 2] = lightPosition_p.z;
+				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+			}
+		}
+		else
+		{
+			numberOfLights = 1;
+			if (!lightPass)
+			{
+				glUniform1ui(numberOfLightsID, numberOfLights);
+				lightsPositions[step] = lightPosition.x;
+				lightsPositions[step + 1] = lightPosition.y;
+				lightsPositions[step + 2] = lightPosition.z;
+				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
+			}
+		}
+	}
+
 	setUniforms(model.top() * eyeOne->getModel(), coal);
 	sphere.drawObject(coalTex);
 
@@ -383,11 +430,15 @@ void drawScene()
 	model.pop();
 }
 
+//display loop
 void display()
 {
-	transformation* lights[3] = { bulbOne, bulbTwo, bulbThree };
-	glm::vec3 lightPosition_p;
-	GLfloat lightsPositions[3 * 3];//number of lights * xyz
+	glViewport(0, 0, width, height);
+	static const GLfloat ones[] = { 1.0f };
+	static const GLfloat zero[] = { 0.0f };
+	static const GLfloat gray[] = { 0.1f, 0.1f, 0.1f, 0.0f };
+	lightPass = !lightPass;
+	lightPass = lightPass * shadows;
 	//array holding light bulbs
 
 	/* Define the background colour */
@@ -415,29 +466,41 @@ void display()
 	glUseProgram(shaders[lightPass]);
 	if (lightPass)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
-		glBindTexture(GL_TEXTURE_2D, shadow_texture);
+		projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
+		glm::vec3 lightSource = lightPosition;
+		if (light_mode == 1)
+		{
+			lightSource = glm::vec3(1.0, 2.66, 0.0f);
+		}
 		//if lightmode = 1
 		view[lightPass] = glm::lookAt(
-			glm::vec3(lightsPositions[0], lightsPositions[1], lightsPositions[2]), // Camera is at light source, in World Space
+			glm::vec3(lightSource.x, lightSource.y, lightSource.z), // Camera is at light source, in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)
 			);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, shadow_buffer);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glUseProgram(shaders[lightPass]);
 	}
 	else
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
 		//set camera view
 		view[lightPass] = glm::lookAt(
 			glm::vec3(0, 0, zoom), // Camera is at (0,0,4), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 			);
-		//glBindVertexArray(0);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glUseProgram(shaders[lightPass]);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, shadow_texture);
+
 		//render the snow	
-		/* Enable Blending for the analytic point sprite */
 		glUseProgram(shaders[2]);
+		/* Enable Blending for the analytic point sprite */
 		glEnable(GL_BLEND);
 		glm::mat4 flakeModel = glm::translate(model.top(), glm::vec3(0.0, 2.0, 0.0));
 		glUniformMatrix4fv(snowModelID, 1, GL_FALSE, &flakeModel[0][0]);
@@ -448,49 +511,18 @@ void display()
 		snowFlakes->draw();
 		snowFlakes->animate();
 
+		//main shader
 		glUseProgram(shaders[lightPass]);
-
 		glUniform3fv(global_ambientID, 1, &global_ambient[0]);
 		glUniform1ui(textureModeID, 0);
 		glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
-
-		//set number of lights
-		for (int i = 0; i < numberOfLights; i++)
-		{
-			int step = i * 3;
-			if (light_mode)
-			{
-				numberOfLights = 3;
-				glUniform1ui(numberOfLightsID, numberOfLights);
-				glm::mat4 lightModel = model.top() * lights[i]->getModel();
-				setUniforms(lightModel, bulbLight);
-				sphere.drawObject(0);
-				glm::vec4 lightPosition_h = view[lightPass] * lightModel * glm::vec4(lights[i]->getCoords(), 1.0);
-				lightPosition_p = glm::vec3(lightPosition_h.x, lightPosition_h.y, lightPosition_h.z);
-				lightsPositions[step] = lightPosition_p.x;
-				lightsPositions[step + 1] = lightPosition_p.y;
-				lightsPositions[step + 2] = lightPosition_p.z;
-				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
-			}
-			else
-			{
-				numberOfLights = 1;
-				glUniform1ui(numberOfLightsID, numberOfLights);
-				lightsPositions[step] = lightPosition.x;
-				lightsPositions[step + 1] = lightPosition.y;
-				lightsPositions[step + 2] = lightPosition.z;
-				glUniform3fv(light_posID, i + 1, &lightsPositions[0]);
-			}
-		}
-
 		glUniform1ui(lightModeID, light_mode);
-
+		glUniform1ui(shadowModeID, shadows);
 		glUniform1ui(textureModeID, texture_mode); //set Texture mode
 	}
-	//both shaders
 
-	//lightProjection = glm::perspective(30.0f, aspect_ratio, 0.1f, 100.0f);
 	drawScene();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisableVertexAttribArray(0);
 	glUseProgram(0);
 }
@@ -511,20 +543,6 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
-	if (key == '1') bulbOne->translate(-0.02, 'x');
-	if (key == '2') bulbOne->translate(0.02, 'x');
-	if (key == '3') bulbOne->translate(-0.02, 'y');
-	if (key == '4') bulbOne->translate(0.02, 'y');
-	if (key == '5') bulbOne->translate(-0.02, 'z');
-	if (key == '6') bulbOne->translate(0.02, 'z');
-
-	if (key == 'D') bulbThree->translate(-0.02, 'x');
-	if (key == 'A') bulbThree->translate(0.02, 'x');
-	if (key == 'R') bulbThree->translate(-0.02, 'y');
-	if (key == 'E') bulbThree->translate(0.02, 'y');
-	if (key == 'S') bulbThree->translate(-0.02, 'z');
-	if (key == 'W') bulbThree->translate(0.02, 'z');
-
 	if (key == GLFW_KEY_UP)
 	{
 		angle_x -= 1.5;
@@ -541,11 +559,11 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 	{
 		angle_y += 1.5;
 	}
-	if (key == GLFW_KEY_KP_ADD) zoom += 1.0;
-	if (key == GLFW_KEY_KP_SUBTRACT) zoom -= 1.0; 
 
 	if (action == GLFW_PRESS)
 	{
+		if (key == GLFW_KEY_KP_ADD) zoom -= 1.0;
+		if (key == GLFW_KEY_KP_SUBTRACT) zoom += 1.0;
 		//std::cout << "bulb 1 xyz = " << bulbOne->getCoords().x << "," << bulbOne->getCoords().y << "," << bulbOne->getCoords().z << std::endl;
 		//std::cout << "bulb 2 xyz = " << bulbTwo->getCoords().x << "," << bulbTwo->getCoords().y << "," << bulbTwo->getCoords().z << std::endl;
 		if (key == 'M')
@@ -560,6 +578,11 @@ static void keyCallback(GLFWwindow* window, int key, int s, int action, int mods
 		}
 		if (key == 'Z')
 			drawmode = !drawmode;
+
+		if (key == 'S')
+		{
+			shadows = !shadows;
+		};
 	}
 }
 

@@ -177,7 +177,9 @@ void object_ldr::drawObject(GLuint texID)
 			0,                  // no extra data between each position
 			(void*)0            // offset of first element
 			);
-		glBindTexture(GL_TEXTURE_2D, texID);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texID);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_mesh_elements); 
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);

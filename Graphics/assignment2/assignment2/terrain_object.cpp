@@ -105,6 +105,7 @@ void terrain_object::drawObject(int drawmode)
 			0,                  // no extra data between each position
 			(void*)0            // offset of first element
 			);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texID);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_mesh_elements); 

@@ -4,7 +4,8 @@
 
 #define MAX_LIGHTS 2 //arrays must have a constant value
 
-layout (binding = 0) uniform sampler2DShadow shadow_tex;
+layout (binding = 0) uniform sampler2D tex1;
+layout (binding = 1) uniform sampler2DShadow shadow_tex;
 
 in VS_OUT
 {
@@ -17,8 +18,7 @@ in VS_OUT
 
 uniform vec3 specular_colour, emissive, global_ambient, diffuse_colour;
 uniform float shininess, ambient;
-uniform uint light_mode, texture_mode, numberOfLights;
-uniform sampler2D tex1;
+uniform uint light_mode, texture_mode, numberOfLights, shadow_mode;
 
 out vec4 outputColor;
 
@@ -57,6 +57,11 @@ void main()
 	{
 		combinedLighting += getCalculateColour(fs_in.L[i]);
 	}
-	vec4 shadow = textureProj(shadow_tex, fs_in.shadow_coord) * vec4(1.0);
-	outputColor = combinedLighting * texcolour;
+
+	vec4 shadow = vec4(1.0);
+	if(shadow_mode != 0)
+	{
+		shadow = shadow * textureProj(shadow_tex, fs_in.shadow_coord);
+	}
+	outputColor = shadow * combinedLighting * texcolour;
 }
